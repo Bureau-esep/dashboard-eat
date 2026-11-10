@@ -5,12 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboard EAT</title>
 <meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#01002C">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <script>
 /* DASHBOARD EAT · connexion au projet Supabase « dashboard-eat » (clé publique, sans risque) */
 window.EAT_CONFIG = {
   supabaseUrl: "https://sjuyogpzuieqnrypwjgm.supabase.co",
   supabaseAnonKey: "sb_publishable_9DsHZfoXftO0Fkf2kgOV1g_rq19uU3Z"
 };
+if ("serviceWorker" in navigator && location.protocol === "https:") window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -791,6 +795,19 @@ body *{border-radius:0!important}
 .mdl li a{font-weight:600;color:var(--ink);text-decoration:none}.mdl li a:hover{text-decoration:underline}
 .mdl li span{color:var(--ink-2);font-size:13px}.mdl .neg{color:var(--crit)}
 .dlg.wide{max-width:760px}
+.mailp{border-bottom:1px solid var(--line);padding:6px 0}.mailp summary{cursor:pointer;font-size:13.5px}.mailp pre{white-space:pre-wrap;font:12.5px/1.45 var(--mono,monospace);background:var(--sheet-2);padding:8px;border-radius:6px;margin:6px 0 0}
+.nql{margin:0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:2px}
+.cmb{all:unset;cursor:pointer;font-size:12px;color:var(--ink-2);padding:1px 6px;border-radius:999px;border:1px solid transparent;display:inline-flex;gap:4px;align-items:center}
+.cmb:hover,.cmb[aria-expanded="true"]{border-color:var(--line);background:var(--sheet)}.cmb.has{color:var(--ink);font-weight:600}
+.tdr .cmt{grid-column:2/-1;background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:2px 0 6px}
+.cmt ul{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column;gap:6px}
+.cmt li{border-left:3px solid var(--s3);padding:2px 0 2px 8px}
+.cmh{display:flex;gap:8px;align-items:baseline;font-size:12.5px}.cmh span{color:var(--ink-2);font-size:11.5px}.cmh .lnk{font-size:11.5px;margin-left:auto}
+.cmt p{margin:2px 0 0;font-size:13.5px;line-height:1.45}
+.cmn{display:flex;gap:6px;align-items:flex-end}.cmn textarea{flex:1;resize:vertical;min-height:38px;background:var(--sheet-2);border:1px solid var(--line)}
+#main .busy{outline:2px solid var(--warn);outline-offset:1px}
+#main .busyrow{position:relative}
+#main .busyrow::after{content:attr(data-busy);position:absolute;right:6px;top:-9px;z-index:3;font:700 10.5px/1.6 var(--sans);background:var(--warn);color:#2a1d00;padding:0 6px;border-radius:4px;pointer-events:none}
 .vp .note{margin-top:4px;max-width:340px}
 .vp-box{margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--sheet-2);display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;min-width:320px;max-width:620px}
 .vp-box fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
@@ -1364,6 +1381,7 @@ const lineAmt = l => r2(lineQty(l) * (+l.price || 0));
 const sorted = (obj, f = (a,b) => (a.order ?? 0) - (b.order ?? 0)) => Object.entries(obj).map(([id, v]) => ({id, ...v})).sort(f);
 const linesOf = cat => sorted(S.lines).filter(l => l.cat === cat);
 const ICON = {
+  chat:'<svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3h11a1 1 0 0 1 1 1v6.5a1 1 0 0 1-1 1H7l-3.5 2.5V11.5h-1a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
   warn:'<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 15 14H1z" fill="var(--warn)"/><path d="M8 6v4" stroke="#0b0b0b" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="12" r=".9" fill="#0b0b0b"/></svg>',
   crit:'<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="var(--crit)"/><path d="M8 4.2v4.6" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".95" fill="#fff"/></svg>',
   good:'<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="var(--good)"/><path d="m4.8 8.2 2.2 2.2 4.2-4.6" stroke="#fff" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -1483,8 +1501,17 @@ function undo() {
   finally { undoMute = false; }
   updUndo(); toast("Modification annulée.");
 }
+function docPatch(prev, body) {
+  if (!prev || typeof prev !== "object") return null;
+  for (const k of Object.keys(prev)) if (!(k in body)) return null;
+  const patch = {}; let n = 0;
+  for (const k of Object.keys(body)) if (JSON.stringify(prev[k]) !== JSON.stringify(body[k])) { patch[k] = body[k]; n++; }
+  return n ? patch : null;
+}
 function saveDoc(col, id, body) {
+  const prev = col === "meta" ? S.meta[id] : (S[col] || {})[id];
   recordUndo(col, id); logChange(col, id, "set", body);
+  if (DB && DB.patchable) { const patch = docPatch(prev, body); if (patch) return enqueue(col + "/" + id, () => DB.collection(col).doc(id).update(patch, body)); }
   if (DB) return enqueue(col + "/" + id, () => DB.collection(col).doc(id).set(body));
   S[col][id] = body; render(); return Promise.resolve();
 }
@@ -1533,7 +1560,7 @@ async function startData() {
   const fresh = {lines:null, entries:null, crews:null, orgs:null};
   let timer = setTimeout(() => setSync("warn", "Données injoignables pour l'instant"), 10000);
   const check = () => {
-    if (Object.values(got).every(Boolean)) { clearTimeout(timer); timer = null; S.src = "db"; setSync("ok", "Synchronisé"); }
+    if (Object.values(got).every(Boolean)) { clearTimeout(timer); timer = null; S.src = "db"; if (SB) showNet(); else setSync("ok", "Synchronisé"); }
   };
   for (const col of cols) {
     let last = null;
@@ -1638,6 +1665,7 @@ function doRender() {
   decorateCards(v);
   applyRo();
   remindOnce();
+  markEditing();
   if (BOARD.open) boardUpdate();
   scheduleCrewViews();
   window.scrollTo(0, sy);
@@ -1999,6 +2027,33 @@ function myDueCard() {
     ${r.n ? `<ul class="mdl">${r.ts.map(t => `<li><a href="#planning">${esc(t.t || "Tâche")}</a><span>${esc(fmtDate(t.due))} · ${when(t.due)}${taskWho(t).length > 1 ? ` · avec ${esc(taskWho(t).filter(x => x !== me).map(x => S.orgs[x].name).join(", "))}` : ""}</span></li>`).join("")}${r.ds.map(d => `<li><a href="#planning">Décision : ${esc(d.t || "")}</a><span>${esc(fmtDate(d.due))} · ${when(d.due)}</span></li>`).join("")}</ul>`
       : `<p class="sub" style="margin:0">Rien pour toi dans les 3 prochains jours. ${ICON.good}</p>`}</section>`;
 }
+let PRES = null; const EDITING = {};
+function startPresence() {
+  if (!SB || PRES) return;
+  try {
+    PRES = SB.channel("eat-edit", {config:{presence:{key:ME}}});
+    PRES.on("presence", {event:"sync"}, () => {
+      const st = PRES.presenceState ? PRES.presenceState() : {};
+      for (const k in EDITING) delete EDITING[k];
+      for (const [uid, metas] of Object.entries(st || {})) { if (uid === ME) continue; for (const m of metas || []) if (m && m.k) (EDITING[m.k] ||= []).includes(m.n) || EDITING[m.k].push(m.n || "Quelqu'un"); }
+      markEditing();
+    }).subscribe(st => { if (st === "SUBSCRIBED") presTrack(""); });
+    main.addEventListener("focusin", e => { const k = e.target.dataset && e.target.dataset.b; if (k) presTrack(k); });
+    main.addEventListener("focusout", e => { if (e.target.dataset && e.target.dataset.b) setTimeout(() => { const a = document.activeElement; if (!a || !a.dataset || !a.dataset.b) presTrack(""); }, 50); });
+  } catch (_) { PRES = null; }
+}
+let presLast = null;
+function presTrack(k) { if (!PRES || presLast === k) return; presLast = k; try { PRES.track({n:myName(), k}); } catch (_) {} }
+function markEditing() {
+  document.querySelectorAll("#main .busy").forEach(x => { x.classList.remove("busy"); x.removeAttribute("title"); });
+  document.querySelectorAll("#main .busyrow").forEach(x => { x.classList.remove("busyrow"); x.removeAttribute("data-busy"); });
+  for (const [k, names] of Object.entries(EDITING)) {
+    const el = [...document.querySelectorAll("#main [data-b]")].find(x => x.dataset.b === k); if (!el) continue;
+    const who = names.map(n => String(n).split(" ")[0]).join(", ");
+    el.classList.add("busy"); el.title = `${names.join(", ")} modifie ce champ en ce moment`;
+    const row = el.closest(".strip,.tdr,.dcr,.ln,tr,.xrow,.card"); if (row) { row.classList.add("busyrow"); row.dataset.busy = who + " modifie…"; }
+  }
+}
 function remindOnce() {
   if (UI.remindDone || S.src !== "db" || CREWMODE || !Object.keys(S.tasks).length) return;
   const me = meOrg(); if (!me) return;
@@ -2008,6 +2063,60 @@ function remindOnce() {
   LSset(k, today);
   const late = r.ts.filter(t => t.due < today).length;
   setTimeout(() => toast(`${(S.orgs[me].name || "").split(" ")[0]}, tu as ${r.n} échéance${r.n > 1 ? "s" : ""} d'ici 3 jours${late ? `, dont ${late} en retard` : ""}. Détail sur la Synthèse.`), 900);
+}
+const myName = () => { const m = meOrg(); return (m && S.orgs[m].name) || (PROFILE && (PROFILE.name || PROFILE.email)) || "Moi"; };
+function commentsThread(t) {
+  const cs = Array.isArray(t.comments) ? t.comments : [];
+  const when = iso => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString("fr-FR", {day:"2-digit", month:"2-digit"}) + " " + d.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"}); };
+  return `<div class="cmt">${cs.length ? `<ul>${cs.map(c => `<li><div class="cmh"><b>${esc(c.n || "?")}</b><span>${esc(when(c.at))}</span>${c.uid && c.uid === ME ? `<button class="lnk" data-act="cmDel" data-id="${t.id}" data-v="${esc(c.id)}" aria-label="Supprimer ce commentaire">supprimer</button>` : ""}</div><p>${esc(c.t || "").replace(/\n/g, "<br>")}</p></li>`).join("")}</ul>` : `<p class="note">Pas encore de commentaire. Note ici l'avancement : devis reçu, relance faite, contact obtenu…</p>`}
+    <div class="cmn"><textarea class="in" id="cm-${t.id}" rows="2" placeholder="Ajouter un commentaire (Entrée pour envoyer, Maj+Entrée pour aller à la ligne)" aria-label="Nouveau commentaire"></textarea><button class="btn sm primary" data-act="cmAdd" data-id="${t.id}">Envoyer</button></div></div>`;
+}
+const PARTICLES = new Set(["de", "du", "des", "d", "la", "le", "van", "von", "der", "den", "di", "da", "dos", "el"]);
+const capW = w => w.split("-").map(p => p.split("'").map(q => q ? q[0].toUpperCase() + q.slice(1) : q).join("'")).join("-");
+const cleanWords = s => String(s || "").trim().replace(/\s+/g, " ").toLowerCase().split(" ").filter(Boolean);
+const nicePart = (s, upper) => cleanWords(s).map((w, i) => i > 0 && PARTICLES.has(w) ? w : upper ? w.toUpperCase() : capW(w)).join(" ");
+const niceFull = (s, style) => { const ws = cleanWords(s); if (!ws.length) return ""; return [capW(ws[0]), nicePart(ws.slice(1).join(" "), style === "NOM")].filter(Boolean).join(" "); };
+function nameQuality(style = UI.nqStyle || "Nom") {
+  const fixes = [], seen = {}, nums = [];
+  const note = (n, where) => { const k = normName(n); if (!k) return; (seen[k] ||= []).push(where); if (/^\d+$/.test(String(n).trim())) nums.push({n, where}); };
+  for (const o of sorted(S.orgs)) { const a = niceFull(o.name, style); note(o.name, "Organisateur"); if (o.name && a && a !== o.name && !/^\d+$/.test(o.name.trim())) fixes.push({col:"orgs", id:o.id, before:o.name, after:a, where:"Organisateur"}); }
+  for (const c of sorted(S.crews)) (c.members || []).forEach((m, i) => { const f = m.first ? capW(cleanWords(m.first).join(" ")) : "", l = m.last ? nicePart(m.last, style === "NOM") : ""; note(memName(m), c.name || "Équipage");
+    if ((m.first || m.last) && (f !== (m.first || "") || l !== (m.last || ""))) fixes.push({col:"crews", id:c.id, idx:i, first:f, last:l, before:memName(m), after:[f, l].filter(Boolean).join(" "), where:c.name || "Équipage"}); });
+  const dups = Object.entries(seen).filter(([k, w]) => w.length > 1).map(([k, w]) => ({k, where:w}));
+  return {fixes, dups, nums};
+}
+function deepRename(v, map) {
+  if (typeof v === "string") { const k = normName(v); return map[k] !== undefined ? map[k] : v; }
+  if (Array.isArray(v)) return v.map(x => deepRename(x, map));
+  if (v && typeof v === "object") { const o = {}; for (const [k, x] of Object.entries(v)) o[k] = deepRename(x, map); return o; }
+  return v;
+}
+function nameFixBox() {
+  const m = $("#modal");
+  const draw = () => {
+    const q = nameQuality(), st = UI.nqStyle || "Nom";
+    m.innerHTML = `<div class="scrim"><div class="dlg wide" role="dialog" aria-modal="true" aria-label="Harmoniser les noms"><h2 class="h2" style="margin:0 0 6px">Harmoniser les noms</h2>
+      <p class="note" style="margin:0 0 8px">Majuscule au prénom, espaces nettoyés. Les chambres et les plans de voiture suivent automatiquement.</p>
+      <div class="rstyle" style="margin-bottom:8px">${["Nom", "NOM"].map(k => `<button class="rs ${st === k ? "on" : ""}" data-nq="${k}">Prénom ${k}</button>`).join("")}</div>
+      <div class="ptp" style="max-height:320px">${q.fixes.length ? `<table class="ptt"><thead><tr><th>Avant</th><th>Après</th><th>Où</th></tr></thead><tbody>${q.fixes.map(f => `<tr><td>${esc(f.before)}</td><td><b>${esc(f.after)}</b></td><td>${esc(f.where)}</td></tr>`).join("")}</tbody></table>` : `<p class="note">Tous les noms sont déjà propres.</p>`}
+      ${q.dups.length ? `<h3 style="margin:12px 0 4px;font-size:14px">Doublons possibles</h3><ul class="nql">${q.dups.map(d => `<li><b>${esc(d.k)}</b> : ${esc(d.where.join(", "))}</li>`).join("")}</ul>` : ""}
+      ${q.nums.length ? `<h3 style="margin:12px 0 4px;font-size:14px">Noms à compléter</h3><ul class="nql">${q.nums.map(d => `<li><b>« ${esc(d.n)} »</b> : ${esc(d.where)} (à renommer à la main)</li>`).join("")}</ul>` : ""}</div>
+      <div class="row" style="margin-top:12px"><button class="btn ghost" data-m="0">Fermer</button><button class="btn primary" data-m="1" ${q.fixes.length ? "" : "disabled"}>Harmoniser ${q.fixes.length} nom${q.fixes.length > 1 ? "s" : ""}</button></div></div></div>`;
+  };
+  draw();
+  m.onclick = async e => {
+    const t = e.target.closest("[data-nq]"); if (t) { UI.nqStyle = t.dataset.nq; draw(); return; }
+    const b = e.target.closest("[data-m]"); if (!b) { if (e.target.classList.contains("scrim")) m.innerHTML = ""; return; } if (b.dataset.m === "0") { m.innerHTML = ""; return; }
+    const q = nameQuality(); if (!q.fixes.length) return;
+    undoBatch = null; const map = {};
+    for (const f of q.fixes) map[normName(f.before)] = f.after;
+    for (const f of q.fixes.filter(f => f.col === "orgs")) await saveDoc("orgs", f.id, {...S.orgs[f.id], name:f.after});
+    const byCrew = {}; for (const f of q.fixes.filter(f => f.col === "crews")) (byCrew[f.id] ||= []).push(f);
+    for (const [cid, fs] of Object.entries(byCrew)) { const c = S.crews[cid]; const members = (c.members || []).map((x, i) => { const f = fs.find(y => y.idx === i); return f ? {...x, first:f.first, last:f.last} : x; }); await saveDoc("crews", cid, {...c, members}); }
+    for (const [id, r] of Object.entries(S.rooms)) { const n = deepRename(r, map); if (JSON.stringify(n) !== JSON.stringify(r)) await saveDoc("rooms", id, n); }
+    for (const [id, r] of Object.entries(S.carplans)) { const n = deepRename(r, map); if (JSON.stringify(n) !== JSON.stringify(r)) await saveDoc("carplans", id, n); }
+    m.innerHTML = ""; toast(`${q.fixes.length} nom${q.fixes.length > 1 ? "s" : ""} harmonisé${q.fixes.length > 1 ? "s" : ""}.`, false, true);
+  };
 }
 function parseDue(s) {
   s = String(s || "").trim(); if (!s) return "";
@@ -2164,7 +2273,9 @@ function vPlanning() {
       <button class="icon-btn" data-act="delItem" data-col="tasks" data-id="${t.id}" aria-label="Supprimer la tâche">${ICON.x}</button>
       <div class="tdx">${lt ? `<span class="tdlate">En retard de ${daysBetween(t.due, today)} j</span>` : t.due && !t.done ? `<span class="tdin">dans ${daysBetween(today, t.due)} j</span>` : ""}
         ${(Array.isArray(t.co) ? t.co : []).filter(x => S.orgs[x] && x !== t.who).map(x => `<span class="coc">avec ${esc(S.orgs[x].name || "?")}<button data-act="tdCoDel" data-id="${t.id}" data-v="${x}" aria-label="Retirer ${esc(S.orgs[x].name || "")}">×</button></span>`).join("")}
+        <button class="cmb ${(t.comments || []).length ? "has" : ""}" data-act="tdCm" data-id="${t.id}" aria-expanded="${UI.tdCm === t.id}">${ICON.chat || ""}${(t.comments || []).length ? `${t.comments.length} commentaire${t.comments.length > 1 ? "s" : ""}` : "Commenter"}</button>
         <select class="tdco" id="td-${t.id}-co" data-tdco="${t.id}" aria-label="Ajouter un co-responsable"><option value="">+ co-responsable</option>${sorted(S.orgs).filter(o => o.id !== t.who && !(t.co || []).includes(o.id)).map(o => `<option value="${o.id}">${esc(o.name || "Organisateur")}</option>`).join("")}</select></div>
+      ${UI.tdCm === t.id ? commentsThread(t) : ""}
     </div>`; }).join("");
   return `
   <div class="tiles">
@@ -2470,7 +2581,7 @@ function vHistorique() {
 }
 /* ---------- mode consultation ---------- */
 let RO = LS("eat-ro", false);
-const RO_OK = new Set(["logout","account","crTab","openUp","reloadPage","authView","guide","openBoard","flDayX","lgF","goDay","mvTab","planMode","carDay","carVoy","alF","person","docPreview","doc","exportPage","reportPdf","reportHtml","csv","docHtml","copyCsv","toggleCard","foldAll","toggleMode","toggleRo","tdF","rday","roomStyle","backup","xlsx","ics","toggleMembers","spEv","exportXlsx"]);
+const RO_OK = new Set(["tdCm","dcF","tdF","logout","account","crTab","openUp","reloadPage","authView","guide","openBoard","flDayX","lgF","goDay","mvTab","planMode","carDay","carVoy","alF","person","docPreview","doc","exportPage","reportPdf","reportHtml","csv","docHtml","copyCsv","toggleCard","foldAll","toggleMode","toggleRo","tdF","rday","roomStyle","backup","xlsx","ics","toggleMembers","spEv","exportXlsx"]);
 function applyRo() {
   document.documentElement.classList.toggle("ro", RO);
   const b = document.getElementById("robtn"); if (b) { b.setAttribute("aria-pressed", String(RO)); b.textContent = RO ? "Consultation" : "Édition"; b.title = RO ? "Mode consultation : rien ne peut être modifié. Clique pour repasser en édition." : "Passer en mode consultation (lecture seule)"; }
@@ -3024,25 +3135,100 @@ const sbUid = () => "x" + Date.now().toString(36) + Math.random().toString(36).s
 function sbErr(e) { const m = String((e && (e.message || e.code)) || ""); return (e && (e.code === "42501" || /row-level security|permission/i.test(m))) ? {code:"invalid_argument", message:m} : {code:"unavailable", message:m}; }
 /* adaptateur : même interface que la base de l'artifact (collection / doc / onSnapshot / set / delete) */
 function supaDB(sb) {
-  const cache = {}, subs = {}, loading = {};
+  const cache = {}, subs = {}, timers = {};
+  let all = null, hist = null;
+  const OUTK = "eat-outbox:" + ME, CACHEK = "eat-cache:" + ME;
   const snap = col => ({docs:Object.entries(cache[col] || {}).map(([id, d]) => ({id, exists:true, data:() => d})), metadata:{fromCache:false}});
-  const notify = col => (subs[col] || []).forEach(f => { try { f(snap(col)); } catch (_) {} });
+  const notifyNow = col => (subs[col] || []).forEach(f => { try { f(snap(col)); } catch (_) {} });
+  const notify = col => { clearTimeout(timers[col]); timers[col] = setTimeout(() => notifyNow(col), 60); };
+  const isNet = e => !navigator.onLine || /fetch|network|load failed|timeout/i.test(String((e && (e.message || e.details)) || e || ""));
+  const outbox = () => LS(OUTK, []);
+  const setOutbox = o => { LSset(OUTK, o); OFFLINE.pending = o.length; showNet(); };
+  let saveT = null;
+  const persist = () => { clearTimeout(saveT); saveT = setTimeout(() => { try { const data = {}; for (const c in cache) if (c !== "history") data[c] = cache[c]; localStorage.setItem(CACHEK, JSON.stringify({at:new Date().toISOString(), profile:PROFILE, data})); } catch (_) {} }, 1500); };
   sb.channel("docs-rt").on("postgres_changes", {event:"*", schema:"public", table:"docs"}, p => {
     const row = p.eventType === "DELETE" ? p.old : p.new; if (!row || !row.col || !cache[row.col]) return;
-    if (p.eventType === "DELETE") delete cache[row.col][row.id]; else cache[row.col][row.id] = row.data;
-    notify(row.col);
+    if (p.eventType === "DELETE") delete cache[row.col][row.id];
+    else if (JSON.stringify(cache[row.col][row.id]) === JSON.stringify(row.data)) return;
+    else cache[row.col][row.id] = row.data;
+    notify(row.col); persist();
   }).subscribe();
-  async function load(col) {
-    if (loading[col]) return loading[col];
-    return loading[col] = (async () => { const out = {}; for (let from = 0; ; from += 1000) { const {data, error} = await sb.from("docs").select("id,data").eq("col", col).range(from, from + 999); if (error) throw error; for (const r of data) out[r.id] = r.data; if (data.length < 1000) break; } cache[col] = out; notify(col); })();
+  function fromCacheFile() {
+    try { const c = JSON.parse(localStorage.getItem(CACHEK) || "null"); if (!c || !c.data) return false; for (const k in c.data) cache[k] = c.data[k]; OFFLINE.cached = c.at; return true; } catch (_) { return false; }
   }
-  const api = {collection(col) { const c = {
-    onSnapshot(cb, err) { (subs[col] ||= []).push(cb); if (cache[col]) cb(snap(col)); else load(col).catch(e => { loading[col] = null; err && err(e); }); return () => {}; },
+  async function loadAll() {
+    if (all) return all;
+    return all = (async () => {
+      const out = {};
+      try {
+        for (let from = 0; ; from += 1000) {
+          const {data, error} = await sb.from("docs").select("col,id,data").neq("col", "history").range(from, from + 999);
+          if (error) throw error;
+          for (const r of data) (out[r.col] ||= {})[r.id] = r.data;
+          if (data.length < 1000) break;
+        }
+        for (const k of Object.keys(cache)) if (k !== "history") delete cache[k];
+        Object.assign(cache, out); OFFLINE.cached = null; persist();
+      } catch (e) {
+        if (!fromCacheFile()) { all = null; throw e; }
+        OFFLINE.on = true; showNet();
+      }
+      for (const c in subs) if (c !== "history") { cache[c] ||= {}; notifyNow(c); }
+    })();
+  }
+  async function loadHist() {
+    if (hist) return hist;
+    return hist = (async () => { const {data} = await sb.from("docs").select("id,data").eq("col", "history").order("updated_at", {ascending:false}).limit(300); cache.history = Object.fromEntries((data || []).map(r => [r.id, r.data])); notifyNow("history"); })().catch(() => { cache.history = {}; notifyNow("history"); });
+  }
+  async function write(op) {
+    const {col, id, kind, body, patch} = op;
+    if (kind === "delete") { const {error} = await sb.from("docs").delete().eq("col", col).eq("id", id); if (error) throw error; return; }
+    if (kind === "patch") {
+      const {error} = await sb.rpc("doc_patch", {p_col:col, p_id:id, p_patch:patch});
+      if (!error) return;
+      if (!/doc_patch|function|PGRST20/i.test(String(error.message || "") + (error.code || ""))) throw error;
+    }
+    const {error} = await sb.from("docs").upsert({col, id, data:body, updated_at:new Date().toISOString()}); if (error) throw error;
+  }
+  async function run(op) {
+    if (!navigator.onLine || OFFLINE.flushing || outbox().length) { setOutbox([...outbox(), op]); OFFLINE.on = !navigator.onLine; return; }
+    try { await write(op); }
+    catch (e) { if (isNet(e)) { setOutbox([...outbox(), op]); OFFLINE.on = true; showNet(); return; } all = null; loadAll().catch(() => {}); throw sbErr(e); }
+  }
+  async function flush() {
+    if (OFFLINE.flushing || !navigator.onLine) return;
+    OFFLINE.flushing = true;
+    try {
+      let o = outbox();
+      while (o.length) { try { await write(o[0]); } catch (e) { if (isNet(e)) break; toast("Une modification faite hors connexion a été refusée : " + (e.message || ""), true); } o = outbox().slice(1); setOutbox(o); }
+      if (!o.length) { OFFLINE.on = false; all = null; await loadAll().catch(() => {}); toast("Connexion retrouvée : tes modifications sont enregistrées."); }
+    } finally { OFFLINE.flushing = false; showNet(); }
+  }
+  window.addEventListener("online", () => setTimeout(flush, 800));
+  window.addEventListener("offline", () => { OFFLINE.on = true; showNet(); });
+  setTimeout(flush, 3000);
+  const local = (col, id, body) => { (cache[col] ||= {}); if (body === null) delete cache[col][id]; else cache[col][id] = body; notify(col); persist(); };
+  const api = {patchable:true, cachedProfile:() => { try { return (JSON.parse(localStorage.getItem(CACHEK) || "null") || {}).profile || null; } catch (_) { return null; } },
+    collection(col) { const c = {
+    onSnapshot(cb, err) { (subs[col] ||= []).push(cb); if (cache[col]) cb(snap(col)); else (col === "history" ? loadHist() : loadAll()).catch(e => err && err(e)); return () => {}; },
     doc(id) { id = id || sbUid(); return {id,
-      set:async body => { const {error} = await sb.from("docs").upsert({col, id, data:body, updated_at:new Date().toISOString()}); if (error) throw sbErr(error); (cache[col] ||= {})[id] = body; notify(col); },
-      delete:async () => { const {error} = await sb.from("docs").delete().eq("col", col).eq("id", id); if (error) throw sbErr(error); if (cache[col]) delete cache[col][id]; notify(col); }}; },
+      set:async body => { local(col, id, body); await run({col, id, kind:"set", body}); },
+      update:async (patch, full) => { local(col, id, full); await run({col, id, kind:"patch", patch, body:full}); },
+      delete:async () => { local(col, id, null); await run({col, id, kind:"delete"}); }}; },
     orderBy() { return c; }, limit() { return c; }}; return c; }};
   return api;
+}
+const OFFLINE = {on:false, cached:null, pending:0, flushing:false};
+function showNet() {
+  if (!SB) return;
+  const p = OFFLINE.pending ? ` · ${OFFLINE.pending} modification${OFFLINE.pending > 1 ? "s" : ""} en attente` : "";
+  if (OFFLINE.on || !navigator.onLine) setSync("warn", `Hors connexion${OFFLINE.cached ? " · données du " + new Date(OFFLINE.cached).toLocaleString("fr-FR", {day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit"}) : ""}${p}`);
+  else if (OFFLINE.pending) setSync("warn", "Envoi des modifications…" + p);
+  else if (S.src === "db") setSync("ok", "Synchronisé");
+}
+function storedSbUser() {
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k)) { const v = JSON.parse(localStorage.getItem(k)); const u = v && (v.user || (v.currentSession && v.currentSession.user)); if (u && u.id) return u; } } } catch (_) {}
+  return null;
 }
 function blobSaver() {
   return {save:async ({filename, data}) => {
@@ -3060,14 +3246,16 @@ async function bootSupa(cfg) {
   DL = blobSaver();
   document.documentElement.classList.add("online");
   SB.auth.onAuthStateChange((ev) => { if (ev === "PASSWORD_RECOVERY") { AUTHVIEW = "newpwd"; render(); } if (ev === "SIGNED_OUT") location.reload(); });
-  const {data} = await SB.auth.getSession();
+  let data = null; try { ({data} = await SB.auth.getSession()); } catch (_) {}
+  if ((!data || !data.session) && !navigator.onLine) { const u = storedSbUser(); if (u) { await afterLogin({user:u}); return; } }
   if (!data || !data.session) { AUTHVIEW = AUTHVIEW || "login"; setSync("warn", "Non connecté"); render(); return; }
   if (AUTHVIEW === "newpwd") { render(); return; }
   await afterLogin(data.session);
 }
 async function afterLogin(session) {
   ME = session.user.id;
-  const {data:prof, error} = await SB.from("profiles").select("*").eq("id", ME).maybeSingle();
+  let {data:prof, error} = await SB.from("profiles").select("*").eq("id", ME).maybeSingle().then(r => r, e => ({data:null, error:e}));
+  if (error || (!prof && !navigator.onLine)) { try { const c = JSON.parse(localStorage.getItem("eat-cache:" + ME) || "null"); if (c && c.profile) { prof = c.profile; error = null; OFFLINE.on = true; } } catch (_) {} }
   if (error) { setSync("bad", "Profil introuvable"); AUTHVIEW = "error"; render(); return; }
   PROFILE = prof || {id:ME, email:session.user.email, role:"attente"};
   AUTHVIEW = "";
@@ -3077,7 +3265,7 @@ async function afterLogin(session) {
   DB = supaDB(SB);
   USER = {id:async () => ME, canEdit:() => canWrite(), isOwner:() => PROFILE.role === "superadmin", profiles:async ids => Object.fromEntries(ids.map(id => [id, {name:(PROFILES.find(p => p.id === id) || {}).name || (PROFILES.find(p => p.id === id) || {}).email || ""}]))};
   if (PROFILE.role === "lecteur" || PROFILE.role === "lecteur_simple") { RO = true; document.documentElement.classList.add("lecteur"); }
-  await loadProfiles(); loadUploads();
+  await loadProfiles().catch(() => {}); loadUploads(); startPresence();
   SB.channel("staff-rt").on("postgres_changes", {event:"*", schema:"public", table:"uploads"}, () => loadUploads()).on("postgres_changes", {event:"*", schema:"public", table:"profiles"}, () => loadProfiles().then(render)).subscribe();
   startData();
 }
@@ -3123,11 +3311,13 @@ function accountBox() {
     <p class="note" style="margin:0 0 10px">${esc(PROFILE.email || "")} · ${esc(ROLES_L[PROFILE.role] || "")}</p>
     ${PROFILE.role !== "equipage" ? `<p class="note" style="margin:0 0 10px">${PROFILE.org_id && S.orgs[PROFILE.org_id] ? `Fiche liée : <b>${esc(S.orgs[PROFILE.org_id].name || "")}</b>` : "Ton compte n'est pas encore lié à ta fiche d'organisateur. Le responsable du Dashboard peut le faire dans Comptes et droits."}</p>` : ""}
     <label class="fld" for="ac-name">Prénom et nom<input id="ac-name" value="${esc(PROFILE.name || "")}"></label>
+    ${PROFILE.role !== "equipage" ? `<label class="tog" for="ac-mail" style="margin-top:8px"><input type="checkbox" id="ac-mail" ${PROFILE.mail_ok === false ? "" : "checked"}>Recevoir mes rappels et le récap par e-mail</label>` : ""}
     <label class="fld" for="ac-pwd" style="margin-top:8px">Nouveau mot de passe (facultatif)<input id="ac-pwd" type="password" minlength="8" autocomplete="new-password"></label>
     <div class="row" style="margin-top:14px"><button class="btn ghost" data-m="0">Fermer</button><button class="btn primary" data-m="1">Enregistrer</button></div></div></div>`;
   m.onclick = async e => { const b = e.target.closest("[data-m]"); if (!b) { if (e.target.classList.contains("scrim")) m.innerHTML = ""; return; } if (b.dataset.m === "0") { m.innerHTML = ""; return; }
     const name = $("#ac-name").value.trim(), pwd = $("#ac-pwd").value;
     if (name !== (PROFILE.name || "")) { const {error} = await SB.from("profiles").update({name}).eq("id", ME); if (error) return toast("Nom non enregistré.", true); PROFILE.name = name; userChip(); }
+    const mk = document.getElementById("ac-mail"); if (mk && mk.checked !== (PROFILE.mail_ok !== false)) { const {error} = await SB.from("profiles").update({mail_ok:mk.checked}).eq("id", ME); if (error) return toast("Préférence e-mail non enregistrée (lance 5_emails_et_optimisations.sql dans Supabase).", true); PROFILE.mail_ok = mk.checked; }
     if (pwd) { if (pwd.length < 8) return toast("8 caractères minimum pour le mot de passe.", true); const {error} = await SB.auth.updateUser({password:pwd}); if (error) return toast(error.message, true); }
     m.innerHTML = ""; toast("Compte mis à jour."); };
 }
@@ -3148,7 +3338,8 @@ function vDroits() {
       <td>${p.id === ME ? `<b>${ROLES_L[p.role]}</b><div class="note">toi</div>` : `<select class="in" id="rl-${p.id}" data-role="${p.id}" aria-label="Rôle de ${esc(p.name || p.email || "")}">${Object.entries(ROLES_L).filter(([k]) => k !== "superadmin").map(([k, l]) => `<option value="${k}" ${p.role === k ? "selected" : ""}>${l}</option>`).join("")}</select>`}</td>
       <td>${p.role === "equipage" ? `<select class="in" id="rc-${p.id}" data-rolecrew="${p.id}" aria-label="Équipage de ${esc(p.name || "")}"><option value="">Choisir…</option>${crews.map(c => `<option value="${c.id}" ${p.crew_id === c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select>` : p.role === "lecteur_simple" ? viewsPicker(p) : p.role === "lecteur" ? `<span class="note">tous les onglets, en lecture</span>` : `<span class="note">—</span>`}</td>
       <td>${p.created_at ? esc(new Date(p.created_at).toLocaleDateString("fr-FR")) : ""}</td></tr>`).join("")}</tbody></table></div>
-  </section>`;
+  </section>
+  ${mailsCard()}`;
 }
 function viewsPicker(p) {
   const on = new Set(Array.isArray(p.views) ? p.views : []), n = [...on].filter(v => v !== "droits").length;
@@ -3171,6 +3362,14 @@ function linkCell(p) {
   const cur = p.org_id && S.orgs[p.org_id] ? p.org_id : "", sug = cur ? "" : orgSuggest(p);
   return `<select class="in" id="ro-${p.id}" data-rorg="${p.id}" aria-label="Personne du Dashboard liée à ${esc(p.name || p.email || "")}"><option value="">— Non liée —</option>${sorted(S.orgs).map(o => `<option value="${o.id}" ${cur === o.id ? "selected" : ""} ${taken[o.id] ? "disabled" : ""}>${esc(o.name || "Organisateur")}${taken[o.id] ? ` (déjà lié à ${esc(taken[o.id])})` : ""}</option>`).join("")}</select>
     ${sug ? `<button class="lnk" data-act="linkSug" data-id="${p.id}" data-v="${sug}">Lier à ${esc(S.orgs[sug].name || "")} ?</button>` : cur ? "" : `<div class="note">ses tâches et rappels ne s'afficheront pas</div>`}`;
+}
+function mailsCard() {
+  const P = UI.mailPrev;
+  return `<section class="card"><div class="head-row"><h2 class="h2">E-mails automatiques</h2><span class="rstyle"><button class="rs" data-act="mailPrev" data-v="rappels">Aperçu des rappels</button><button class="rs" data-act="mailPrev" data-v="recap">Aperçu du récap</button></span></div>
+    <p class="sub">Chaque matin vers 7 h, chaque organisateur reçoit ses tâches à rendre dans les 3 jours (et le lundi, ses retards). Le jeudi vers 16 h 30, le récap part à l'équipe (super-administrateur, organisateurs, lecteurs superviseurs). Adresse utilisée : celle du compte lié à la fiche, sinon le champ « E-mail » de la fiche organisateur. Chacun peut se désabonner dans « Mon compte ».</p>
+    ${P === null ? `<p class="note">Chargement…</p>` : P && P.err ? `<div class="banner">${esc(P.err)}</div>` : P ? `<div class="ptp" style="max-height:340px">${P.rows.length ? P.rows.map(r => `<details class="mailp"><summary><b>${esc(r.to)}</b> · ${esc(r.subject)}</summary><pre>${esc(r.text)}</pre></details>`).join("") : `<p class="note">Personne à prévenir pour l'instant.</p>`}</div>
+      <div class="row" style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end"><button class="btn sm primary" data-act="mailSend" data-v="${P.kind}" ${P.rows.length ? "" : "disabled"}>Envoyer ${P.rows.length} e-mail${P.rows.length > 1 ? "s" : ""} maintenant</button></div>` : ""}
+  </section>`;
 }
 async function setViews(id, views) { await setRole(id, {views, cols:colsForViews(views)}); }
 async function setRole(id, patch) {
@@ -4955,7 +5154,10 @@ function vAnnuaire() {
   const lodged = name => linesOf("heb").filter(n => roomStats(n.day).assigned[normName(name)]).length;
   const dietCell = p => p.kind === "crew" ? `<select class="in ${p.diet ? "" : "unset"}" id="ad-${p.cid}-${p.mid}" aria-label="Régime de ${esc(p.name)}" data-mem="${p.cid}|${p.mid}|diet">${dietOpts(p.diet)}</select>` : `<select class="in ${p.diet ? "" : "unset"}" id="ad-o-${p.oid}" aria-label="Régime de ${esc(p.name)}" data-b="orgs|${p.oid}|diet|str">${dietOpts(p.diet)}</select>`;
   const algCell = p => p.kind === "crew" ? `<input class="in" id="aa-${p.cid}-${p.mid}" aria-label="Allergies de ${esc(p.name)}" placeholder="Allergies…" value="${esc(p.allergy)}" data-mem="${p.cid}|${p.mid}|allergy">` : `<input class="in" id="aa-o-${p.oid}" aria-label="Allergies de ${esc(p.name)}" placeholder="Allergies…" value="${esc(p.allergy)}" data-b="orgs|${p.oid}|allergy|str">`;
+  const nq = nameQuality();
   return `
+  ${!RO && (nq.fixes.length || nq.dups.length || nq.nums.length) ? `<section class="card nq"><div class="head-row"><h2 class="h2">Qualité des noms</h2><button class="btn sm" data-act="nameFix">Voir et harmoniser</button></div>
+    <p class="sub">${[nq.fixes.length ? `${nq.fixes.length} nom${nq.fixes.length > 1 ? "s" : ""} à harmoniser (majuscules, espaces)` : "", nq.dups.length ? `${nq.dups.length} doublon${nq.dups.length > 1 ? "s" : ""} possible${nq.dups.length > 1 ? "s" : ""}` : "", nq.nums.length ? `${nq.nums.length} nom${nq.nums.length > 1 ? "s" : ""} qui ne sont que des chiffres` : ""].filter(Boolean).join(" · ")}.</p></section>` : ""}
   <div class="tiles">
     <div class="tile"><span class="lab">Personnes</span><span class="val">${all.length}</span><span class="foot">${all.filter(p => p.kind === "crew").length} en équipage · ${all.filter(p => p.kind === "org").length} organisateurs · budget pour ${settings().people}</span></div>
     <div class="tile hl"><span class="lab">Régimes particuliers ou allergies</span><span class="val">${special.length}</span><span class="foot">à signaler au traiteur et aux hôtels</span></div>
@@ -5023,8 +5225,8 @@ function autoBackupsCard() {
   if (UI.bkList === undefined) { UI.bkList = null; loadBackups(); }
   const L = UI.bkList;
   const when = iso => { const d = new Date(iso); return d.toLocaleDateString("fr-FR", {weekday:"short", day:"2-digit", month:"2-digit", year:"numeric"}) + " · " + d.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"}); };
-  const rowsOf = list => list.map(x => `<div class="xrow"><div class="xh"><b>${esc(when(x.created_at))}</b><span class="note">${x.kind === "manuel" ? "sauvegarde manuelle" : "sauvegarde automatique"} · ${x.n} éléments</span></div><div></div><div></div>
-    <div class="xb"><button class="btn sm" data-act="bkGet" data-v="${x.id}">${ICON.dl}Télécharger</button><button class="btn sm ghost" data-act="bkRestore" data-v="${x.id}">Revenir à cet état</button></div></div>`).join(""), rows = rowsOf(L || []);
+  const rowsOf = list => list.map(x => `<div class="xrow"><div class="xh"><b>${esc(when(x.created_at))}</b><span class="note">${x.kind === "manuel" ? "sauvegarde manuelle" : x.kind === "historique" ? "archive de l'historique de plus de 6 mois" : "sauvegarde automatique"} · ${x.n} éléments</span></div><div></div><div></div>
+    <div class="xb"><button class="btn sm" data-act="bkGet" data-v="${x.id}">${ICON.dl}Télécharger</button>${x.kind === "historique" ? "" : `<button class="btn sm ghost" data-act="bkRestore" data-v="${x.id}">Revenir à cet état</button>`}</div></div>`).join(""), rows = rowsOf(L || []);
   return `<section class="card">
     <div class="head-row"><h2 class="h2">Sauvegardes automatiques</h2>${UI.bkErr ? "" : `<button class="btn sm" data-act="bkNow">Sauvegarder maintenant</button>`}</div>
     <p class="sub">Chaque nuit vers 4 h, une copie complète des données est gardée en ligne pendant 30 jours, avec les 20 dernières sauvegardes manuelles. Tu peux en télécharger une ou revenir à cet état (tu pourras annuler juste après).</p>
@@ -5620,6 +5822,7 @@ main.addEventListener("keydown", e => {
 main.addEventListener("keydown", e => {
   if (e.key !== "Enter") return;
   if (e.target.id === "tdn-t") { e.preventDefault(); document.querySelector('[data-act="addTask"]')?.click(); }
+  if (e.target.id && e.target.id.startsWith("cm-") && !e.shiftKey) { e.preventDefault(); document.querySelector(`[data-act="cmAdd"][data-id="${e.target.id.slice(3)}"]`)?.click(); return; }
   if (e.target.id === "dcn-t") { e.preventDefault(); document.querySelector('[data-act="addDecision"]')?.click(); }
   if (e.target.id === "agn-t" || e.target.id === "agn-place") { e.preventDefault(); document.querySelector('[data-act="addAgenda"]')?.click(); }
   if (e.target.id === "lgn-t") { e.preventDefault(); document.querySelector('[data-act="addLog"]')?.click(); }
@@ -5867,6 +6070,13 @@ document.addEventListener("click", async e => {
   else if (act === "vpOpen") { UI.vpOpen = id || ""; render(); }
   else if (act === "vpNone") { setViews(id, []); }
   else if (act === "dcF") { UI.dcF = b.dataset.v; render(); }
+  else if (act === "mailPrev") { UI.mailPrev = null; render(); const {data, error} = await SB.rpc("eat_mails_preview", {p_kind:b.dataset.v}); UI.mailPrev = error ? {err:/eat_mails_preview|function|PGRST20/i.test(error.message + (error.code || "")) ? "Les e-mails ne sont pas encore installés : lance 5_emails_et_optimisations.sql dans Supabase, puis la fonction d'envoi (voir le guide)." : error.message} : {kind:b.dataset.v, rows:Array.isArray(data) ? data : []}; render(); }
+  else if (act === "mailSend") { if (!(await confirmBox("Envoyer ces e-mails maintenant ?", "Envoyer"))) return; const {error} = await SB.rpc("eat_send_mails", {p_kind:b.dataset.v}); toast(error ? "Envoi impossible : " + error.message : "Envoi lancé. Les e-mails partent dans la minute.", !!error); }
+  else if (act === "nameFix") { nameFixBox(); }
+  else if (act === "tdCm") { UI.tdCm = UI.tdCm === id ? "" : id; render(); if (UI.tdCm) setTimeout(() => document.getElementById("cm-" + id)?.focus(), 60); }
+  else if (act === "cmAdd") { const x = S.tasks[id], el = document.getElementById("cm-" + id), v = el ? el.value.trim() : ""; if (!x || !v) { el && el.focus(); return; }
+    el.value = ""; await saveDoc("tasks", id, {...x, comments:[...(Array.isArray(x.comments) ? x.comments : []), {id:Date.now().toString(36) + Math.random().toString(36).slice(2, 5), uid:ME || "", n:myName(), at:new Date().toISOString(), t:v.slice(0, 2000)}]}); setTimeout(() => document.getElementById("cm-" + id)?.focus(), 80); }
+  else if (act === "cmDel") { const x = S.tasks[id]; if (x && await confirmBox("Supprimer ce commentaire ?")) saveDoc("tasks", id, {...x, comments:(x.comments || []).filter(c => c.id !== b.dataset.v)}); }
   else if (act === "tdCoDel") { const x = S.tasks[id]; if (x) saveDoc("tasks", id, {...x, co:(x.co || []).filter(y => y !== b.dataset.v)}); }
   else if (act === "pasteTasks") { pasteTasksBox(); }
   else if (act === "coConvert") {
@@ -6091,7 +6301,7 @@ function gsGo(i) {
 window.addEventListener("hashchange", () => { tip.classList.remove("on"); render(); window.scrollTo(0, 0); });
 applyMode();
 render();
-if (window.__SEED || window.__SUPA_MOCK) window.__T = {S, whoNames, meOrg, parseTaskLines};
+if (window.__SEED || window.__SUPA_MOCK) window.__T = {S, whoNames, meOrg, parseTaskLines, EDITING, markEditing};
 boot();
 })();
 </script>
