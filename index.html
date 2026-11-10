@@ -1974,6 +1974,7 @@ function matchOrg(raw) {
   return "";
 }
 function meOrg() {
+  if (PROFILE && PROFILE.org_id && S.orgs[PROFILE.org_id]) return PROFILE.org_id;
   const ls = LS("eat-me", ""); if (ls && S.orgs[ls]) return ls;
   if (PROFILE) {
     const em = String(PROFILE.email || "").trim().toLowerCase();
@@ -1994,7 +1995,7 @@ function myDueCard() {
   if (!me) return Object.keys(S.tasks).length ? `<section class="card mydue"><div class="head-row"><h2 class="h2">Tes échéances</h2>${meSelect("me-syn", "")}</div><p class="sub">Indique qui tu es pour voir ici tes tâches et décisions à venir. Ce choix reste sur cet appareil.</p></section>` : "";
   const r = myDue(me), today = todayISO();
   const when = d => d < today ? `<b class="neg">en retard de ${daysBetween(d, today)} j</b>` : d === today ? "<b>aujourd'hui</b>" : `dans ${daysBetween(today, d)} j`;
-  return `<section class="card mydue"><div class="head-row"><h2 class="h2">Tes échéances · ${esc(S.orgs[me].name || "")}</h2>${meSelect("me-syn", me)}</div>
+  return `<section class="card mydue"><div class="head-row"><h2 class="h2">Tes échéances · ${esc(S.orgs[me].name || "")}</h2>${PROFILE && PROFILE.org_id === me ? "" : meSelect("me-syn", me)}</div>
     ${r.n ? `<ul class="mdl">${r.ts.map(t => `<li><a href="#planning">${esc(t.t || "Tâche")}</a><span>${esc(fmtDate(t.due))} · ${when(t.due)}${taskWho(t).length > 1 ? ` · avec ${esc(taskWho(t).filter(x => x !== me).map(x => S.orgs[x].name).join(", "))}` : ""}</span></li>`).join("")}${r.ds.map(d => `<li><a href="#planning">Décision : ${esc(d.t || "")}</a><span>${esc(fmtDate(d.due))} · ${when(d.due)}</span></li>`).join("")}</ul>`
       : `<p class="sub" style="margin:0">Rien pour toi dans les 3 prochains jours. ${ICON.good}</p>`}</section>`;
 }
@@ -3120,6 +3121,7 @@ function accountBox() {
   const m = $("#modal");
   m.innerHTML = `<div class="scrim"><div class="dlg" role="dialog" aria-modal="true" aria-label="Mon compte"><h2 class="h2" style="margin:0 0 12px">Mon compte</h2>
     <p class="note" style="margin:0 0 10px">${esc(PROFILE.email || "")} · ${esc(ROLES_L[PROFILE.role] || "")}</p>
+    ${PROFILE.role !== "equipage" ? `<p class="note" style="margin:0 0 10px">${PROFILE.org_id && S.orgs[PROFILE.org_id] ? `Fiche liée : <b>${esc(S.orgs[PROFILE.org_id].name || "")}</b>` : "Ton compte n'est pas encore lié à ta fiche d'organisateur. Le responsable du Dashboard peut le faire dans Comptes et droits."}</p>` : ""}
     <label class="fld" for="ac-name">Prénom et nom<input id="ac-name" value="${esc(PROFILE.name || "")}"></label>
     <label class="fld" for="ac-pwd" style="margin-top:8px">Nouveau mot de passe (facultatif)<input id="ac-pwd" type="password" minlength="8" autocomplete="new-password"></label>
     <div class="row" style="margin-top:14px"><button class="btn ghost" data-m="0">Fermer</button><button class="btn primary" data-m="1">Enregistrer</button></div></div></div>`;
@@ -3138,10 +3140,11 @@ function vDroits() {
   <div class="tiles">${Object.keys(ROLES_L).map(r => `<div class="tile"><span class="lab">${ROLES_L[r]}</span><span class="val">${PROFILES.filter(p => p.role === r).length}</span></div>`).join("")}</div>
   <section class="card">
     <div class="head-row"><h2 class="h2">Comptes et droits</h2>${pend ? `<span class="chip warn">${pend} compte${pend > 1 ? "s" : ""} à valider</span>` : ""}</div>
-    <p class="sub">Chacun crée son compte depuis l'écran de connexion. Il arrive « En attente » : choisis ici son rôle, et pour un équipage, l'équipage auquel il est rattaché. Tu es le seul à pouvoir modifier les droits.</p>
+    <p class="sub">Chacun crée son compte depuis l'écran de connexion. Il arrive « En attente » : choisis ici son rôle, et pour un équipage, l'équipage auquel il est rattaché. Lie aussi chaque compte à sa fiche d'organisateur : ses tâches, ses rappels et « Mes tâches » s'afficheront automatiquement. Tu es le seul à pouvoir modifier les droits.</p>
     <ul class="roles">${Object.entries(ROLES_D).map(([k, d]) => `<li><b>${ROLES_L[k]}</b> : ${esc(d)}</li>`).join("")}</ul>
-    <div class="scroll"><table class="tbl"><thead><tr><th>Personne</th><th>Rôle</th><th>Équipage ou onglets ouverts</th><th>Créé le</th></tr></thead><tbody>
+    <div class="scroll"><table class="tbl"><thead><tr><th>Compte</th><th>Personne du Dashboard</th><th>Rôle</th><th>Équipage ou onglets ouverts</th><th>Créé le</th></tr></thead><tbody>
     ${PROFILES.map(p => `<tr class="${p.role === "attente" ? "pend" : ""}"><td><b>${esc(p.name || "—")}</b><div class="note">${esc(p.email || "")}</div></td>
+      <td>${linkCell(p)}</td>
       <td>${p.id === ME ? `<b>${ROLES_L[p.role]}</b><div class="note">toi</div>` : `<select class="in" id="rl-${p.id}" data-role="${p.id}" aria-label="Rôle de ${esc(p.name || p.email || "")}">${Object.entries(ROLES_L).filter(([k]) => k !== "superadmin").map(([k, l]) => `<option value="${k}" ${p.role === k ? "selected" : ""}>${l}</option>`).join("")}</select>`}</td>
       <td>${p.role === "equipage" ? `<select class="in" id="rc-${p.id}" data-rolecrew="${p.id}" aria-label="Équipage de ${esc(p.name || "")}"><option value="">Choisir…</option>${crews.map(c => `<option value="${c.id}" ${p.crew_id === c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select>` : p.role === "lecteur_simple" ? viewsPicker(p) : p.role === "lecteur" ? `<span class="note">tous les onglets, en lecture</span>` : `<span class="note">—</span>`}</td>
       <td>${p.created_at ? esc(new Date(p.created_at).toLocaleDateString("fr-FR")) : ""}</td></tr>`).join("")}</tbody></table></div>
@@ -3156,11 +3159,25 @@ function viewsPicker(p) {
       <div class="row"><button class="lnk" data-act="vpNone" data-id="${p.id}">Tout fermer</button><button class="btn sm primary" data-act="vpOpen" data-id="">Terminé</button></div>
       <p class="note">Il ne voit que les données utiles à ces onglets, sans pouvoir rien modifier. « Toutes les données » : l'onglet affiche des chiffres de tout l'outil, donc il lui donne accès à tout.</p></div>` : ""}</div>`;
 }
+function orgSuggest(p) {
+  const taken = new Set(PROFILES.filter(x => x.org_id && x.id !== p.id).map(x => x.org_id));
+  const em = String(p.email || "").trim().toLowerCase(), n = normKey(p.name);
+  const o = sorted(S.orgs).find(o => !taken.has(o.id) && ((em && String(o.email || "").trim().toLowerCase() === em) || (n && normKey(o.name) === n)));
+  return o ? o.id : "";
+}
+function linkCell(p) {
+  if (p.role === "equipage") return `<span class="note">rattaché à son équipage</span>`;
+  const taken = Object.fromEntries(PROFILES.filter(x => x.org_id && x.id !== p.id).map(x => [x.org_id, x.name || x.email || "un autre compte"]));
+  const cur = p.org_id && S.orgs[p.org_id] ? p.org_id : "", sug = cur ? "" : orgSuggest(p);
+  return `<select class="in" id="ro-${p.id}" data-rorg="${p.id}" aria-label="Personne du Dashboard liée à ${esc(p.name || p.email || "")}"><option value="">— Non liée —</option>${sorted(S.orgs).map(o => `<option value="${o.id}" ${cur === o.id ? "selected" : ""} ${taken[o.id] ? "disabled" : ""}>${esc(o.name || "Organisateur")}${taken[o.id] ? ` (déjà lié à ${esc(taken[o.id])})` : ""}</option>`).join("")}</select>
+    ${sug ? `<button class="lnk" data-act="linkSug" data-id="${p.id}" data-v="${sug}">Lier à ${esc(S.orgs[sug].name || "")} ?</button>` : cur ? "" : `<div class="note">ses tâches et rappels ne s'afficheront pas</div>`}`;
+}
 async function setViews(id, views) { await setRole(id, {views, cols:colsForViews(views)}); }
 async function setRole(id, patch) {
   const {error} = await SB.from("profiles").update(patch).eq("id", id);
-  if (error) { toast("Modification refusée : " + error.message, true); return; }
-  await loadProfiles(); render(); toast("Droits mis à jour.");
+  if (error) { toast(/duplicate|unique/i.test(error.message) ? "Cette personne est déjà liée à un autre compte." : "Modification refusée : " + error.message, true); return; }
+  await loadProfiles(); { const me = PROFILES.find(x => x.id === ME); if (me) Object.assign(PROFILE, {org_id:me.org_id, views:me.views, cols:me.cols}); }
+  render(); toast("Droits mis à jour.");
 }
 /* --- fiches publiées pour chaque équipage (calculées par les organisateurs) --- */
 const CV_LAST = {};
@@ -4021,6 +4038,7 @@ function vOrgs() {
         <label class="mini" for="o-${o.id}-email">E-mail<input class="in" type="email" id="o-${o.id}-email" placeholder="adresse du compte Dashboard" value="${esc(o.email || "")}" data-b="orgs|${o.id}|email|str"></label>
         <label class="tog permis" for="o-${o.id}-permis" title="Les organisateurs avec le permis sont mis au volant en priorité"><input type="checkbox" id="o-${o.id}-permis" data-b="orgs|${o.id}|permis|bool" ${o.permis ? "checked" : ""}>Permis B · conducteur prioritaire</label>
         <button class="lnk" data-act="person" data-v="${esc(o.name || "")}" ${o.name ? "" : "hidden"}>Voir la fiche</button>
+        ${SB ? (a => a ? `<span class="chip good" title="Compte lié dans Comptes et droits">compte : ${esc(a.email || a.name || "")}</span>` : "")(PROFILES.find(x => x.org_id === o.id)) : ""}
       </div>
     </div>`).join("");
   const partial = orgs.filter(o => (o.nights ?? nights) < nights).length;
@@ -5429,6 +5447,7 @@ main.addEventListener("change", e => {
   const t = e.target;
   if (t.dataset.upload) { doUpload(t); return; }
   if (t.dataset.role) { const p = PROFILES.find(x => x.id === t.dataset.role); setRole(t.dataset.role, {role:t.value, crew_id:t.value === "equipage" ? (p && p.crew_id) || null : null}); return; }
+  if (t.dataset.rorg) { setRole(t.dataset.rorg, {org_id:t.value || null}); return; }
   if (t.dataset.rview) { const [pid, v] = t.dataset.rview.split("|"), p = PROFILES.find(x => x.id === pid); if (!p) return; const cur = new Set(Array.isArray(p.views) ? p.views : []); t.checked ? cur.add(v) : cur.delete(v); setViews(pid, VIEWS.map(x => x.id).filter(x => cur.has(x))); return; }
   if (t.dataset.rolecrew) { setRole(t.dataset.rolecrew, {crew_id:t.value || null}); return; }
   if (t.dataset.tdwho) { UI.tdWho = t.value; render(); return; }
@@ -5844,6 +5863,7 @@ document.addEventListener("click", async e => {
   else if (act === "toggleRo") { RO = !RO; LSset("eat-ro", RO); toast(RO ? "Mode consultation : rien ne peut être modifié." : "Mode édition."); render(); }
   else if (act === "toggleJust") { const x = S.entries[id]; if (x) saveDoc("entries", id, {...x, just:!x.just}); }
   else if (act === "tdF") { UI.tdF = b.dataset.v; render(); }
+  else if (act === "linkSug") { setRole(id, {org_id:b.dataset.v}); }
   else if (act === "vpOpen") { UI.vpOpen = id || ""; render(); }
   else if (act === "vpNone") { setViews(id, []); }
   else if (act === "dcF") { UI.dcF = b.dataset.v; render(); }
