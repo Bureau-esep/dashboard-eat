@@ -594,6 +594,8 @@ select.in.miss{border-color:var(--warn);background:var(--warn-soft)}
 .xrow .fld>span{font-size:12.5px;color:var(--ink-2);font-weight:500}
 .xrow .rstyle{margin:0}
 @media (max-width:1000px){.xrow{grid-template-columns:1fr}.xb{justify-content:flex-start}}
+.exp .xrow{grid-template-columns:1fr;gap:8px;align-items:start}.exp .xrow>div:empty{display:none}.exp .xb{justify-content:flex-start}
+.exp .card .head-row{flex-wrap:wrap;gap:8px}
 .exp-lnk{font-size:12.5px;font-weight:600}
 .pagebar{align-items:center}
 .rstyle{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px}
@@ -764,7 +766,37 @@ body *{border-radius:0!important}
 .tdr .in{background:var(--sheet-2);border-color:var(--line);font-size:13.5px}
 .tdr.done .in{color:var(--muted);text-decoration:line-through}
 .tdr.late{background:color-mix(in srgb,var(--crit) 8%,transparent)}
-.tdr .tdlate,.tdr .tdin{grid-column:2/-1;font-size:12px;margin:-2px 0 2px}
+.tdr .tdx{grid-column:2/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-2px 0 2px;min-height:0}
+.tdr .tdlate,.tdr .tdin{font-size:12px}
+.coc{display:inline-flex;align-items:center;gap:2px;font-size:12px;padding:1px 4px 1px 8px;border-radius:999px;background:var(--sheet-2);border:1px solid var(--line);color:var(--ink-2)}
+.coc button{all:unset;cursor:pointer;padding:0 4px;font-weight:700;color:var(--muted)}
+.coc button:hover{color:var(--crit)}
+.tdco{font-size:12px;border:1px dashed var(--line);background:transparent;border-radius:999px;padding:1px 6px;color:var(--ink-2);max-width:170px}
+.tdr:not(:hover):not(:focus-within) .tdco{opacity:.55}
+.dcnew{grid-template-columns:1fr 150px 190px auto!important}
+.dcr{display:grid;grid-template-columns:minmax(200px,1fr) 138px 170px 130px 28px;gap:4px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.dcr .in{background:var(--sheet-2);border-color:var(--line);font-size:13.5px}
+.dcr.late{background:color-mix(in srgb,var(--crit) 8%,transparent)}
+.dcr.tranche .in[id$="-st"]{color:var(--good-ink,#1b6b3a);font-weight:700}
+.dcr.abandon{opacity:.6}
+.dcr .dcx{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dcr .dcx>.in{flex:1 1 260px}
+.dcr .dcx .mini{flex:0 0 auto;flex-direction:row;align-items:center;gap:4px}
+.dcr .dcx .mini .in{width:140px}
+.dcr .tdlate{color:var(--crit);font-weight:700;font-size:12px}.dcr .tdin{color:var(--ink-2);font-size:12px}
+.mydue{border-left:4px solid var(--s3)}
+.mydue .head-row select{max-width:240px;background:var(--sheet-2);border:1px solid var(--line)}
+.mdl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.mdl li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.mdl li a{font-weight:600;color:var(--ink);text-decoration:none}.mdl li a:hover{text-decoration:underline}
+.mdl li span{color:var(--ink-2);font-size:13px}.mdl .neg{color:var(--crit)}
+.dlg.wide{max-width:760px}
+.pth{background:var(--sheet-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:12.5px/1.45 var(--mono,monospace);white-space:pre-wrap;margin:0}
+#pt-txt{font:13px/1.45 var(--mono,monospace);resize:vertical}
+.ptp{max-height:260px;overflow:auto;margin-top:10px}
+.ptt{width:100%;border-collapse:collapse;font-size:13px}.ptt th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2);border-bottom:2px solid var(--nuit);padding:4px}
+.ptt td{padding:5px 4px;border-bottom:1px solid var(--line);vertical-align:top}.ptw{display:block;color:var(--warn-ink);font-size:11.5px}
+@media (max-width:760px){.dcr{grid-template-columns:1fr 1fr}.dcr .in[id$="-t"]{grid-column:1/-1}.dcnew{grid-template-columns:1fr!important}}
 .tdr .tdlate{color:var(--crit);font-weight:700}
 .tdr .tdin{color:var(--ink-2)}
 .tdck{display:grid;place-items:center}
@@ -1285,7 +1317,7 @@ const REF = {
 
 /* ================= état ================= */
 const clone = o => JSON.parse(JSON.stringify(o));
-const S = {lines:clone(REF.lines), crews:clone(REF.crews), orgs:clone(REF.orgs), legs:clone(REF.legs), services:clone(REF.services), rooms:{}, carplans:{}, events:{}, entries:{}, tasks:{}, agenda:{}, meals:{}, airfields:{}, contacts:{}, logbook:{}, flights:{}, schedule:{}, portal:{}, meta:clone(REF.meta), src:"ref"};
+const S = {lines:clone(REF.lines), crews:clone(REF.crews), orgs:clone(REF.orgs), legs:clone(REF.legs), services:clone(REF.services), rooms:{}, carplans:{}, events:{}, entries:{}, tasks:{}, decisions:{}, agenda:{}, meals:{}, airfields:{}, contacts:{}, logbook:{}, flights:{}, schedule:{}, portal:{}, meta:clone(REF.meta), src:"ref"};
 const UI = {
   roomStyle:(() => { try { return localStorage.getItem("eat-room-style") || "classic"; } catch (_) { return "classic"; } })(),
   draft:null, editId:null,
@@ -1488,7 +1520,7 @@ async function boot() {
   startData();
 }
 async function startData() {
-  const cols = ["lines","entries","crews","orgs","legs","services","rooms","carplans","events","tasks","agenda","meals","airfields","contacts","logbook","flights","schedule","portal","meta"];
+  const cols = ["lines","entries","crews","orgs","legs","services","rooms","carplans","events","tasks","decisions","agenda","meals","airfields","contacts","logbook","flights","schedule","portal","meta"];
   const got = Object.fromEntries(cols.map(c => [c, false]));
   startHistory();
   try { if (!LS("eat-guide", 0) && USER && typeof USER.isOwner === "function" && !(await USER.isOwner())) setTimeout(() => openGuide(0), 900); } catch (_) {}
@@ -1595,6 +1627,7 @@ function doRender() {
   if (fid) { const n = document.getElementById(fid); if (n) { n.focus({preventScroll:true}); if (sel) try { n.setSelectionRange(sel[0], sel[1]); } catch (_) {} } }
   decorateCards(v);
   applyRo();
+  remindOnce();
   if (BOARD.open) boardUpdate();
   scheduleCrewViews();
   window.scrollTo(0, sy);
@@ -1824,7 +1857,7 @@ function peopleIssues() {
 }
 function allIssues() {
   if (CG.__issues) return CG.__issues;
-  const c = calc(), out = [...budgetIssues(c), ...peopleIssues(), ...crewDocIssues(), ...roomIssues(), ...taskIssues(), ...logIssues(), ...flightIssues(), ...tresoIssues()];
+  const c = calc(), out = [...budgetIssues(c), ...peopleIssues(), ...crewDocIssues(), ...roomIssues(), ...taskIssues(), ...decisionIssues(), ...logIssues(), ...flightIssues(), ...tresoIssues()];
   { const nj = Object.values(S.entries).filter(e => e.type === "depense" && !e.just).length; if (nj) out.push({k:"info", t:`${nj} dépense${nj > 1 ? "s" : ""} sans justificatif`, d:"Factures et reçus à récupérer pour le bilan.", area:"budget", href:"#saisie"}); }
   for (const x of travelIssues()) out.push({...x, area:x.car ? "voitures" : "deplacements", href:x.car ? "#deplacements/voitures" : "#deplacements/planning"});
   const rank = {crit:0, warn:1, info:2, good:3};
@@ -1887,7 +1920,8 @@ function countdown() {
   if (att.length) ev.push({date:"", t:`Obtenir ${att.length} recette${att.length > 1 ? "s" : ""} en attente`, href:"#budget"});
   const svc = servicesSorted().filter(s => (s.status || "a_prevoir") === "a_prevoir").length;
   if (svc) ev.push({date:"", t:`Organiser ${svc} trajet${svc > 1 ? "s" : ""} de service`, href:"#deplacements/services"});
-  for (const t of sorted(S.tasks).filter(t => !t.done && t.due)) ev.push({date:t.due, t:(t.ms ? "Jalon : " : "") + (t.t || "Tâche") + (t.who && S.orgs[t.who] ? " · " + (S.orgs[t.who].name || "") : ""), href:"#planning"});
+  for (const t of sorted(S.tasks).filter(t => !t.done && t.due)) ev.push({date:t.due, t:(t.ms ? "Jalon : " : "") + (t.t || "Tâche") + (taskWho(t).length ? " · " + whoNames(t) : ""), href:"#planning"});
+  for (const d of sorted(S.decisions).filter(d => (d.st || "ouvert") === "ouvert" && d.due)) ev.push({date:d.due, t:"Décision : " + (d.t || ""), href:"#planning"});
   ev.sort((a, b) => (a.date || "9").localeCompare(b.date || "9"));
   return `<div class="cd">
     <div class="cd-big">${left == null ? `<span class="hero-fig">J-?</span><span class="note">Renseigne la date de la nuit J0 dans Hébergement pour lancer le compte à rebours.</span>` : left >= 0 ? `<span class="hero-fig">J-${left}</span><span class="note">avant le départ · ${esc(dayFmt(d0))}</span>` : `<span class="hero-fig">J+${-left}</span><span class="note">l'EAT a commencé le ${esc(dayFmt(d0))}</span>`}</div>
@@ -1916,6 +1950,156 @@ const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d
 const daysBetween = (a, b) => Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 864e5);
 const orgOpts = (sel, empty = "Personne") => `<option value="">${empty}</option>` + sorted(S.orgs).map(o => `<option value="${o.id}" ${sel === o.id ? "selected" : ""}>${esc(o.name || "Organisateur")}</option>`).join("");
 const tasksSorted = () => sorted(S.tasks, (a, b) => (!!a.done - !!b.done) || (a.due || "9").localeCompare(b.due || "9") || (a.order ?? 0) - (b.order ?? 0));
+/* ---------- co-responsables, « moi », import de tâches, décisions ---------- */
+const normKey = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9-]+/g, " ").trim();
+const taskWho = t => [t.who, ...(Array.isArray(t.co) ? t.co : [])].filter((x, i, a) => x && a.indexOf(x) === i && S.orgs[x]);
+const whoNames = t => taskWho(t).map(id => S.orgs[id].name || "?").join(", ");
+const isMine = (t, oid) => !!oid && taskWho(t).includes(oid);
+function matchOrg(raw) {
+  const n = normKey(raw); if (!n) return "";
+  const orgs = sorted(S.orgs).map(o => ({id:o.id, n:normKey(o.name)})).filter(o => o.n);
+  const full = orgs.filter(o => o.n === n); if (full.length === 1) return full[0].id;
+  const first = orgs.filter(o => o.n.split(" ")[0] === n); if (first.length === 1) return first[0].id;
+  const pre = orgs.filter(o => o.n.startsWith(n + " ") || o.n.startsWith(n)); if (pre.length === 1) return pre[0].id;
+  return "";
+}
+function meOrg() {
+  const ls = LS("eat-me", ""); if (ls && S.orgs[ls]) return ls;
+  if (PROFILE) {
+    const em = String(PROFILE.email || "").trim().toLowerCase();
+    const a = em && sorted(S.orgs).find(o => String(o.email || "").trim().toLowerCase() === em); if (a) return a.id;
+    const n = normKey(PROFILE.name); const b = n && sorted(S.orgs).find(o => normKey(o.name) === n); if (b) return b.id;
+  }
+  return "";
+}
+const meSelect = (id, me) => `<select class="in" id="${id}" data-me="1" aria-label="Qui es-tu ?"><option value="">Qui es-tu ?</option>${sorted(S.orgs).map(o => `<option value="${o.id}" ${me === o.id ? "selected" : ""}>${esc(o.name || "Organisateur")}</option>`).join("")}</select>`;
+function myDue(oid, days = 3) {
+  const today = todayISO(), lim = addDays(today, days);
+  const ts = sorted(S.tasks).filter(t => !t.done && t.due && t.due <= lim && isMine(t, oid)).sort((a, b) => a.due.localeCompare(b.due));
+  const ds = sorted(S.decisions).filter(d => (d.st || "ouvert") === "ouvert" && d.due && d.due <= addDays(today, 7) && d.who === oid).sort((a, b) => a.due.localeCompare(b.due));
+  return {ts, ds, n:ts.length + ds.length};
+}
+function myDueCard() {
+  const me = meOrg();
+  if (!me) return Object.keys(S.tasks).length ? `<section class="card mydue"><div class="head-row"><h2 class="h2">Tes échéances</h2>${meSelect("me-syn", "")}</div><p class="sub">Indique qui tu es pour voir ici tes tâches et décisions à venir. Ce choix reste sur cet appareil.</p></section>` : "";
+  const r = myDue(me), today = todayISO();
+  const when = d => d < today ? `<b class="neg">en retard de ${daysBetween(d, today)} j</b>` : d === today ? "<b>aujourd'hui</b>" : `dans ${daysBetween(today, d)} j`;
+  return `<section class="card mydue"><div class="head-row"><h2 class="h2">Tes échéances · ${esc(S.orgs[me].name || "")}</h2>${meSelect("me-syn", me)}</div>
+    ${r.n ? `<ul class="mdl">${r.ts.map(t => `<li><a href="#planning">${esc(t.t || "Tâche")}</a><span>${esc(fmtDate(t.due))} · ${when(t.due)}${taskWho(t).length > 1 ? ` · avec ${esc(taskWho(t).filter(x => x !== me).map(x => S.orgs[x].name).join(", "))}` : ""}</span></li>`).join("")}${r.ds.map(d => `<li><a href="#planning">Décision : ${esc(d.t || "")}</a><span>${esc(fmtDate(d.due))} · ${when(d.due)}</span></li>`).join("")}</ul>`
+      : `<p class="sub" style="margin:0">Rien pour toi dans les 3 prochains jours. ${ICON.good}</p>`}</section>`;
+}
+function remindOnce() {
+  if (UI.remindDone || S.src !== "db" || CREWMODE || !Object.keys(S.tasks).length) return;
+  const me = meOrg(); if (!me) return;
+  UI.remindDone = true;
+  const k = "eat-remind-" + me, today = todayISO(); if (LS(k, "") === today) return;
+  const r = myDue(me); if (!r.n) return;
+  LSset(k, today);
+  const late = r.ts.filter(t => t.due < today).length;
+  setTimeout(() => toast(`${(S.orgs[me].name || "").split(" ")[0]}, tu as ${r.n} échéance${r.n > 1 ? "s" : ""} d'ici 3 jours${late ? `, dont ${late} en retard` : ""}. Détail sur la Synthèse.`), 900);
+}
+function parseDue(s) {
+  s = String(s || "").trim(); if (!s) return "";
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/); if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+  m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?$/); if (!m) return "";
+  const dd = +m[1], mm = +m[2]; if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return "";
+  let y = m[3] ? +m[3] : 0; if (y && y < 100) y += 2000;
+  const iso = yy => `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+  if (!y) { y = +todayISO().slice(0, 4); if (iso(y) < addDays(todayISO(), -60)) y++; }
+  return iso(y);
+}
+function matchPhase(s) {
+  const n = normKey(s); if (!n) return "Autre";
+  return PHASES.find(p => normKey(p) === n) || PHASES.find(p => normKey(p).startsWith(n)) || PHASES.find(p => normKey(p).split(" ").some(w => w.length > 3 && w.startsWith(n))) || "";
+}
+const splitNames = s => String(s || "").split(/\s*(?:,|\/|\+|&|;|\bet\b)\s*/i).map(x => x.trim()).filter(Boolean);
+function parseTaskLines(txt) {
+  const out = [];
+  for (const raw of String(txt || "").split(/\r?\n/)) {
+    const line = raw.trim(); if (!line || line.startsWith("//")) continue;
+    const f = (line.includes("\t") ? line.split("\t") : line.split(";")).map(x => x.trim());
+    if (/^(titre|t[aâ]che|action)$/i.test(f[0])) continue;
+    let t = f[0].replace(/^[-•*]\s*/, ""); if (!t) continue;
+    const r = {t, due:parseDue(f[1]), who:"", co:[], phase:matchPhase(f[3]), ms:/^(oui|o|x|jalon|◆|1|yes|y)$/i.test(f[4] || ""), warn:[]};
+    if (f[1] && !r.due) r.warn.push(`date « ${f[1]} » non reconnue`);
+    if (!r.phase) { r.warn.push(`phase « ${f[3]} » inconnue, mise en « Autre »`); r.phase = "Autre"; }
+    const unknown = [];
+    for (const n of splitNames(f[2])) { const id = matchOrg(n); if (!id) unknown.push(n); else if (!r.who) r.who = id; else if (id !== r.who && !r.co.includes(id)) r.co.push(id); }
+    if (unknown.length) { r.t += ` (${unknown.join(", ")})`; r.warn.push(`${unknown.join(", ")} : pas dans les organisateurs, ajouté au titre`); }
+    out.push(r);
+  }
+  return out;
+}
+function withCoFromTitle(t) {
+  const m = String(t.t || "").match(/^(.*?)\s*\(avec\s+([^()]+)\)\s*$/i); if (!m) return null;
+  const ids = splitNames(m[2]).map(matchOrg); if (!ids.length || ids.some(x => !x)) return null;
+  const co = [...(Array.isArray(t.co) ? t.co : [])]; for (const id of ids) if (id !== t.who && !co.includes(id)) co.push(id);
+  return {t:m[1].trim(), co, who:t.who || co.shift() || ""};
+}
+const PASTE_HELP = `Une tâche par ligne. Champs séparés par un point-virgule (ou copiés depuis Excel) :
+Titre ; Échéance ; Responsable(s) ; Phase ; Jalon
+
+Envoyer le dossier FFA ; 21/11/2026 ; Antoine, Matthieu ; Sportif ; oui
+Devis goodies ; 30/11 ; Arsène ; Communication
+Relancer les équipages`;
+function pasteTasksBox() {
+  const m = $("#modal"), txt = UI.pasteTxt || "";
+  const draw = () => {
+    const rows = parseTaskLines($("#pt-txt").value); UI.pasteTxt = $("#pt-txt").value;
+    $("#pt-prev").innerHTML = rows.length ? `<table class="ptt"><thead><tr><th>Tâche</th><th>Échéance</th><th>Responsable(s)</th><th>Phase</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r.ms ? "◆ " : ""}${esc(r.t)}${r.warn.length ? `<small class="ptw">${esc(r.warn.join(" · "))}</small>` : ""}</td><td>${r.due ? esc(fmtDate(r.due)) : "—"}</td><td>${esc([r.who, ...r.co].filter(x => S.orgs[x]).map(x => S.orgs[x].name).join(", ") || "—")}</td><td>${esc(r.phase)}</td></tr>`).join("")}</tbody></table>` : `<p class="note">L'aperçu s'affiche ici dès que tu colles des lignes.</p>`;
+    const b = m.querySelector('[data-m="1"]'); b.textContent = rows.length ? `Ajouter ${rows.length} tâche${rows.length > 1 ? "s" : ""}` : "Ajouter"; b.disabled = !rows.length;
+  };
+  m.innerHTML = `<div class="scrim"><div class="dlg wide" role="dialog" aria-modal="true" aria-label="Coller des tâches"><h2 class="h2" style="margin:0 0 6px">Coller des tâches</h2>
+    <pre class="pth">${esc(PASTE_HELP)}</pre>
+    <p class="note" style="margin:4px 0 8px">Échéance : 21/11/2026, 21/11 ou 2026-11-21. Le premier nom est le responsable, les suivants les co-responsables (prénom suffit s'il est unique). Phase : ${PHASES.map(esc).join(", ")}. Jalon : « oui ».</p>
+    <textarea id="pt-txt" class="box" rows="8" placeholder="Colle tes lignes ici…">${esc(txt)}</textarea>
+    <div id="pt-prev" class="ptp"></div>
+    <div class="row" style="margin-top:12px"><button class="btn ghost" data-m="0">Fermer</button><button class="btn primary" data-m="1">Ajouter</button></div></div></div>`;
+  $("#pt-txt").addEventListener("input", draw); draw(); $("#pt-txt").focus();
+  m.onclick = async e => { const b = e.target.closest("[data-m]"); if (!b) { if (e.target.classList.contains("scrim")) m.innerHTML = ""; return; } if (b.dataset.m === "0") { m.innerHTML = ""; return; }
+    const rows = parseTaskLines($("#pt-txt").value); if (!rows.length) return;
+    let order = Object.values(S.tasks).reduce((k, x) => Math.max(k, x.order || 0), 0);
+    undoBatch = null;
+    for (const r of rows) await saveDoc("tasks", newId("tasks"), {order:++order, t:r.t, phase:r.phase, due:r.due, start:"", who:r.who, co:r.co, done:false, ms:r.ms});
+    m.innerHTML = ""; UI.pasteTxt = ""; UI.tdF = "afaire"; render(); toast(`${rows.length} tâche${rows.length > 1 ? "s" : ""} ajoutée${rows.length > 1 ? "s" : ""}.`);
+  };
+}
+/* --- décisions --- */
+const DEC_ST = {ouvert:"À trancher", tranche:"Tranchée", abandon:"Abandonnée"};
+const decSorted = () => sorted(S.decisions, (a, b) => ((a.st || "ouvert") !== "ouvert") - ((b.st || "ouvert") !== "ouvert") || (a.due || "9").localeCompare(b.due || "9") || (a.order ?? 0) - (b.order ?? 0));
+function decisionIssues() {
+  const today = todayISO(), late = sorted(S.decisions).filter(d => (d.st || "ouvert") === "ouvert" && d.due && d.due < today);
+  return late.length ? [{k:"warn", t:`${late.length} décision${late.length > 1 ? "s" : ""} à trancher en retard`, d:late.slice(0, 3).map(d => d.t || "Décision").join(", "), area:"planning", href:"#planning"}] : [];
+}
+function decisionsCard() {
+  const today = todayISO(), all = decSorted(), f = UI.dcF ||= "ouvert";
+  const list = all.filter(d => f === "tout" || (d.st || "ouvert") === f || (f === "tranche" && d.st === "abandon"));
+  const nOpen = all.filter(d => (d.st || "ouvert") === "ouvert").length;
+  const conv = sorted(S.tasks).filter(t => /^trancher\s*:/i.test(t.t || ""));
+  const rows = list.map(d => { const st = d.st || "ouvert", lt = st === "ouvert" && d.due && d.due < today; return `<div class="dcr ${st} ${lt ? "late" : ""}">
+      <input class="in" id="dc-${d.id}-t" value="${esc(d.t || "")}" placeholder="Question à trancher" data-b="decisions|${d.id}|t|str" aria-label="Question">
+      <input class="in" type="date" id="dc-${d.id}-due" value="${esc(d.due || "")}" data-b="decisions|${d.id}|due|str" aria-label="À trancher avant le" title="À trancher avant le">
+      <select class="in" id="dc-${d.id}-who" data-b="decisions|${d.id}|who|str" aria-label="Qui porte la décision">${orgOpts(d.who, "Qui porte ?")}</select>
+      <select class="in" id="dc-${d.id}-st" data-b="decisions|${d.id}|st|str" aria-label="État">${Object.entries(DEC_ST).map(([k, l]) => `<option value="${k}" ${st === k ? "selected" : ""}>${l}</option>`).join("")}</select>
+      <button class="icon-btn" data-act="delItem" data-col="decisions" data-id="${d.id}" aria-label="Supprimer la décision">${ICON.x}</button>
+      <div class="dcx">${st === "ouvert" ? (lt ? `<span class="tdlate">En retard de ${daysBetween(d.due, today)} j</span>` : d.due ? `<span class="tdin">dans ${daysBetween(today, d.due)} j</span>` : "") : ""}
+        <input class="in" id="dc-${d.id}-res" value="${esc(d.res || "")}" placeholder="${st === "ouvert" ? "Options envisagées, notes…" : "Décision retenue"}" data-b="decisions|${d.id}|res|str" aria-label="Décision ou notes">
+        ${st !== "ouvert" ? `<label class="mini" for="dc-${d.id}-at">le<input class="in" type="date" id="dc-${d.id}-at" value="${esc(d.at || "")}" data-b="decisions|${d.id}|at|str"></label><input class="in" id="dc-${d.id}-by" value="${esc(d.by || "")}" placeholder="par qui (réunion, bureau…)" data-b="decisions|${d.id}|by|str" aria-label="Par qui">` : ""}</div>
+    </div>`; }).join("");
+  return `<section class="card">
+    <div class="head-row"><h2 class="h2">Décisions</h2>
+      <span class="rstyle">${Object.entries({ouvert:`À trancher (${nOpen})`, tranche:"Tranchées", tout:"Toutes"}).map(([k, l]) => `<button class="rs ${f === k ? "on" : ""}" data-act="dcF" data-v="${k}" aria-pressed="${f === k}">${l}</button>`).join("")}</span></div>
+    <p class="sub">Les points à trancher, qui les porte, pour quand, et ce qui a été décidé. Passe l'état à « Tranchée » pour noter la décision, la date et qui l'a prise.</p>
+    ${conv.length ? `<div class="banner" style="margin-bottom:10px">${conv.length} tâche${conv.length > 1 ? "s commencent" : " commence"} par « Trancher : ». <button class="lnk" data-act="decConvert">Les transformer en décisions</button></div>` : ""}
+    <div class="tdnew dcnew"><input class="in" id="dcn-t" placeholder="Nouvelle question, ex. Nombre maximal d'équipages" aria-label="Nouvelle décision"><input class="in" type="date" id="dcn-due" aria-label="À trancher avant le"><select class="in" id="dcn-who" aria-label="Qui porte la décision">${orgOpts("", "Qui porte ?")}</select><button class="btn sm primary" data-act="addDecision">+ Ajouter</button></div>
+    <div class="dcl">${rows || `<div class="empty"><b>${all.length ? "Rien dans ce filtre" : "Aucune décision suivie"}</b>${all.length ? "Change de filtre pour voir les autres." : "Ajoute la première question à trancher ci-dessus."}</div>`}</div>
+  </section>`;
+}
+function decisionsDocPages() {
+  const all = decSorted();
+  return chunk(all.length ? all : [null], 22).map((part, i, arr) => ({kicker:"Décisions", head:"EAT " + settings().exercice, title:`Suivi des décisions${arr.length > 1 ? ` (${i + 1}/${arr.length})` : ""}`, sub:`Arrêté le ${fmtDate(todayISO())} · ${all.filter(d => (d.st || "ouvert") === "ouvert").length} à trancher · ${all.filter(d => d.st === "tranche").length} tranchée${all.filter(d => d.st === "tranche").length > 1 ? "s" : ""}`, foot:"Décisions",
+    body:part[0] ? `<table><thead><tr><th>Question</th><th>État</th><th>Avant le</th><th>Porteur</th><th>Décision / notes</th></tr></thead><tbody>${part.map(d => `<tr><td><b>${esc(d.t || "")}</b></td><td>${esc(DEC_ST[d.st || "ouvert"])}</td><td>${d.due ? esc(fmtDate(d.due)) : "—"}</td><td>${esc(d.who && S.orgs[d.who] ? S.orgs[d.who].name : "—")}</td><td>${esc(d.res || "")}${d.at ? `<br><small>le ${esc(fmtDate(d.at))}${d.by ? " · " + esc(d.by) : ""}</small>` : ""}</td></tr>`).join("")}</tbody></table>` : `<p>Aucune décision suivie pour l'instant.</p>`}));
+}
 const eatRange = () => { const ds = dayList().map(dayDate).filter(Boolean).sort(); return ds.length ? [ds[0], ds[ds.length - 1]] : null; };
 function taskIssues() {
   const today = todayISO(), out = [];
@@ -1941,7 +2125,7 @@ function gantt(tasks, forDoc) {
     const late = !t.done && t.due && t.due < today;
     const bar = t.ms ? `<i class="g-ms ${t.done ? "done" : ""} ${late ? "late" : ""}" style="left:${pos(due)}%" title="${esc(t.t || "")}"></i>`
       : `<i class="g-bar ${t.done ? "done" : ""} ${late ? "late" : ""}" style="left:${pos(st)}%;width:${Math.max(.8, pos(addDays(due, 1)) - pos(st))}%;background:${PHASE_COL[t.phase || "Autre"]}" title="${esc(t.t || "")} · ${esc(fmtDate(st))} → ${esc(fmtDate(due))}"></i>`;
-    return `<div class="g-row"><div class="g-l">${t.done ? "✓ " : ""}${esc(t.t || "Tâche")}${t.who && S.orgs[t.who] ? `<small>${esc(S.orgs[t.who].name || "")}</small>` : ""}</div><div class="g-t">${bar}</div></div>`;
+    return `<div class="g-row"><div class="g-l">${t.done ? "✓ " : ""}${esc(t.t || "Tâche")}${taskWho(t).length ? `<small>${esc(whoNames(t))}</small>` : ""}</div><div class="g-t">${bar}</div></div>`;
   };
   if (!groups.length) return `<div class="empty"><b>Rien à afficher</b>Ajoute des tâches avec une échéance pour voir le rétroplanning.</div>`;
   return `<div class="gantt ${forDoc ? "doc-g" : ""}">
@@ -1952,7 +2136,9 @@ function gantt(tasks, forDoc) {
 }
 function vPlanning() {
   const today = todayISO(), all = tasksSorted(), f = UI.tdF ||= "afaire", w = UI.tdWho || "";
-  const list = all.filter(t => (f === "tout" || (f === "fait" ? t.done : !t.done && (f !== "retard" || (t.due && t.due < today)))) && (!w || t.who === w));
+  const me = meOrg(), wf = w === "__me" ? me : w;
+  const list = all.filter(t => (f === "tout" || (f === "fait" ? t.done : !t.done && (f !== "retard" || (t.due && t.due < today)))) && (!w || isMine(t, wf)));
+  const nConv = all.filter(t => withCoFromTitle(t)).length;
   const late = all.filter(t => !t.done && t.due && t.due < today).length, done = all.filter(t => t.done).length;
   const d = UI.tdDraft ||= {t:"", phase:"Autre", due:"", who:"", ms:false};
   const er = eatRange();
@@ -1965,7 +2151,9 @@ function vPlanning() {
       <select class="in" id="td-${t.id}-who" data-b="tasks|${t.id}|who|str" aria-label="Responsable">${orgOpts(t.who)}</select>
       <label class="tdms" title="Jalon : un moment clé, affiché en losange"><input type="checkbox" id="td-${t.id}-ms" data-b="tasks|${t.id}|ms|bool" ${t.ms ? "checked" : ""}>Jalon</label>
       <button class="icon-btn" data-act="delItem" data-col="tasks" data-id="${t.id}" aria-label="Supprimer la tâche">${ICON.x}</button>
-      ${lt ? `<span class="tdlate">En retard de ${daysBetween(t.due, today)} j</span>` : t.due && !t.done ? `<span class="tdin">dans ${daysBetween(today, t.due)} j</span>` : ""}
+      <div class="tdx">${lt ? `<span class="tdlate">En retard de ${daysBetween(t.due, today)} j</span>` : t.due && !t.done ? `<span class="tdin">dans ${daysBetween(today, t.due)} j</span>` : ""}
+        ${(Array.isArray(t.co) ? t.co : []).filter(x => S.orgs[x] && x !== t.who).map(x => `<span class="coc">avec ${esc(S.orgs[x].name || "?")}<button data-act="tdCoDel" data-id="${t.id}" data-v="${x}" aria-label="Retirer ${esc(S.orgs[x].name || "")}">×</button></span>`).join("")}
+        <select class="tdco" id="td-${t.id}-co" data-tdco="${t.id}" aria-label="Ajouter un co-responsable"><option value="">+ co-responsable</option>${sorted(S.orgs).filter(o => o.id !== t.who && !(t.co || []).includes(o.id)).map(o => `<option value="${o.id}">${esc(o.name || "Organisateur")}</option>`).join("")}</select></div>
     </div>`; }).join("");
   return `
   <div class="tiles">
@@ -1981,7 +2169,7 @@ function vPlanning() {
   <section class="card">
     <div class="head-row"><h2 class="h2">To-do list</h2>
       <span class="rstyle">${Object.entries({afaire:"À faire", retard:`En retard (${late})`, fait:"Faites", tout:"Tout"}).map(([k, l]) => `<button class="rs ${f === k ? "on" : ""}" data-act="tdF" data-v="${k}" aria-pressed="${f === k}">${l}</button>`).join("")}</span></div>
-    <p class="sub">Coche une tâche quand elle est faite. Tout se modifie directement dans la liste. Les tâches datées apparaissent dans le rétroplanning, le compte à rebours et l'agenda exporté.</p>
+    <p class="sub">Coche une tâche quand elle est faite. Tout se modifie directement dans la liste. Une tâche peut avoir plusieurs responsables : le premier dans la colonne, les autres via « + co-responsable ». Les tâches datées apparaissent dans le rétroplanning, le compte à rebours et l'agenda exporté.</p>
     <div class="tdnew">
       <input class="in" id="tdn-t" placeholder="Nouvelle tâche, ex. Réserver l'hôtel de Carcassonne" value="${esc(d.t)}" data-tdn="t" aria-label="Nouvelle tâche">
       <select class="in" id="tdn-phase" data-tdn="phase" aria-label="Phase">${PHASES.map(p => `<option ${d.phase === p ? "selected" : ""}>${p}</option>`).join("")}</select>
@@ -1989,9 +2177,13 @@ function vPlanning() {
       <select class="in" id="tdn-who" data-tdn="who" aria-label="Responsable">${orgOpts(d.who, "Responsable…")}</select>
       <button class="btn sm primary" data-act="addTask">+ Ajouter</button>
     </div>
-    <div class="filters" style="margin-top:10px"><select id="td-who-f" data-tdwho="1" aria-label="Filtrer par responsable"><option value="">Tous les responsables</option>${sorted(S.orgs).map(o => `<option value="${o.id}" ${w === o.id ? "selected" : ""}>${esc(o.name || "Organisateur")}</option>`).join("")}</select></div>
-    <div class="tdl"><div class="tdr hd"><span></span><span>Tâche</span><span>Phase</span><span>Début</span><span>Échéance</span><span>Responsable</span><span></span><span></span></div>${rows || `<div class="empty"><b>${all.length ? "Rien dans ce filtre" : "Aucune tâche pour l'instant"}</b>${all.length ? "Change de filtre pour voir les autres tâches." : "Ajoute la première avec le champ ci-dessus."}</div>`}</div>
-  </section>`;
+    <div class="filters" style="margin-top:10px"><select id="td-who-f" data-tdwho="1" aria-label="Filtrer par responsable"><option value="">Tous les responsables</option><option value="__me" ${w === "__me" ? "selected" : ""}>★ Mes tâches${me ? " (" + esc(S.orgs[me].name || "") + ")" : ""}</option>${sorted(S.orgs).map(o => `<option value="${o.id}" ${w === o.id ? "selected" : ""}>${esc(o.name || "Organisateur")}</option>`).join("")}</select>
+      ${w === "__me" && !me ? meSelect("me-td", "") : ""}
+      <button class="btn sm" data-act="pasteTasks">Coller des tâches</button>
+      ${nConv ? `<button class="btn sm ghost" data-act="coConvert" title="Ex. « Dossier de presse (avec Arsène) » : Arsène devient co-responsable et la parenthèse disparaît du titre">Convertir ${nConv} « (avec …) » en co-responsables</button>` : ""}</div>
+    <div class="tdl"><div class="tdr hd"><span></span><span>Tâche</span><span>Phase</span><span>Début</span><span>Échéance</span><span>Responsable</span><span></span><span></span></div>${rows || `<div class="empty"><b>${all.length ? "Rien dans ce filtre" : "Aucune tâche pour l'instant"}</b>${all.length ? (w === "__me" && !me ? "Indique qui tu es pour voir tes tâches." : "Change de filtre pour voir les autres tâches.") : "Ajoute la première avec le champ ci-dessus, ou colle une liste."}</div>`}</div>
+  </section>
+  ${decisionsCard()}`;
 }
 /* ---------- semaine de l'EAT ---------- */
 const MEALS = {midi:{l:"Déjeuner", dep:"12:00", arr:"13:30"}, soir:{l:"Dîner", dep:"19:30", arr:"21:30"}};
@@ -2208,7 +2400,7 @@ function vBilan() {
 /* ---------- historique des modifications ---------- */
 const HIST = {items:[], ready:false};
 let USER = null, ME = "";
-const COL_L = {lines:"Budget", entries:"Opération", crews:"Équipage", orgs:"Organisateur", legs:"Trajet", services:"Service", rooms:"Chambres", carplans:"Plan de voiture", events:"Épreuve", meta:"Réglages", tasks:"Tâche", agenda:"Activité", meals:"Repas", airfields:"Aérodrome", contacts:"Contact", logbook:"Main courante", flights:"Vol", schedule:"Échéance"};
+const COL_L = {lines:"Budget", entries:"Opération", crews:"Équipage", orgs:"Organisateur", legs:"Trajet", services:"Service", rooms:"Chambres", carplans:"Plan de voiture", events:"Épreuve", meta:"Réglages", tasks:"Tâche", decisions:"Décision", agenda:"Activité", meals:"Repas", airfields:"Aérodrome", contacts:"Contact", logbook:"Main courante", flights:"Vol", schedule:"Échéance"};
 function itemLabel(col, id, b) {
   b = b || (col === "meta" ? S.meta[id] : (S[col] || {})[id]) || {};
   if (col === "lines") return lineName(b) || id;
@@ -2218,7 +2410,7 @@ function itemLabel(col, id, b) {
   if (col === "rooms") return `nuit ${id}`;
   if (col === "carplans") return id.replace(/^svc_|^leg_/, "").replace(/_x_.*/, "");
   if (col === "meals") return id.replace("_", " ");
-  if (col === "tasks" || col === "agenda" || col === "logbook") return b.t || "sans titre";
+  if (col === "tasks" || col === "decisions" || col === "agenda" || col === "logbook") return b.t || "sans titre";
   if (col === "schedule") return [b.label, b.amount ? eur(b.amount) : ""].filter(Boolean).join(" · ") || "échéance";
   if (col === "flights") return id;
   if (col === "meta") return ({settings:"paramètres", vehicles:"véhicules", categories:"catégories", brand:"logos", logo_aero:"logo EIGS'AERO", logo_esep:"logo ESEP"})[id] || id;
@@ -2272,7 +2464,7 @@ function applyRo() {
   document.documentElement.classList.toggle("ro", RO);
   const b = document.getElementById("robtn"); if (b) { b.setAttribute("aria-pressed", String(RO)); b.textContent = RO ? "Consultation" : "Édition"; b.title = RO ? "Mode consultation : rien ne peut être modifié. Clique pour repasser en édition." : "Passer en mode consultation (lecture seule)"; }
   if (!RO) return;
-  document.querySelectorAll("#main [data-b],#main [data-mem],#main [data-asg],#main [data-seat],#main [data-slot],#main [data-veh],#main [data-cdoc],#main [data-logo],#main [data-restore],#main [data-tdn],#main [data-agn],#main #ef input,#main #ef select,#main #svcf input,#main #svcf select,#main [data-score],#main [data-ev]").forEach(x => { x.disabled = true; });
+  document.querySelectorAll("#main [data-b],#main [data-mem],#main [data-asg],#main [data-seat],#main [data-slot],#main [data-veh],#main [data-cdoc],#main [data-logo],#main [data-restore],#main [data-tdn],#main [data-tdco],#main [data-agn],#main #dcn-t,#main #dcn-due,#main #dcn-who,#main #ef input,#main #ef select,#main #svcf input,#main #svcf select,#main [data-score],#main [data-ev]").forEach(x => { x.disabled = true; });
   document.querySelectorAll("#main [data-act]").forEach(x => { if (!RO_OK.has(x.dataset.act)) { x.disabled = true; x.classList.add("ro-off"); } });
 }
 /* ---------- agenda .ics ---------- */
@@ -2281,7 +2473,7 @@ function icsText() {
   const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
   const ev = [];
   const dt = (iso, hhmm) => iso.replace(/-/g, "") + "T" + String(hhmm || "00:00").replace(":", "") + "00";
-  for (const t of sorted(S.tasks)) if (t.due) ev.push(["BEGIN:VEVENT", `UID:task-${t.id}@eat`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${t.due.replace(/-/g, "")}`, `DTEND;VALUE=DATE:${addDays(t.due, 1).replace(/-/g, "")}`, `SUMMARY:${pad((t.done ? "✓ " : "") + (t.ms ? "Jalon · " : "Échéance · ") + (t.t || "Tâche"))}`, `DESCRIPTION:${pad([t.phase, t.who && S.orgs[t.who] ? "Responsable : " + S.orgs[t.who].name : ""].filter(Boolean).join(" · "))}`, "END:VEVENT"].join("\r\n"));
+  for (const t of sorted(S.tasks)) if (t.due) ev.push(["BEGIN:VEVENT", `UID:task-${t.id}@eat`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${t.due.replace(/-/g, "")}`, `DTEND;VALUE=DATE:${addDays(t.due, 1).replace(/-/g, "")}`, `SUMMARY:${pad((t.done ? "✓ " : "") + (t.ms ? "Jalon · " : "Échéance · ") + (t.t || "Tâche"))}`, `DESCRIPTION:${pad([t.phase, taskWho(t).length ? "Responsable : " + whoNames(t) : ""].filter(Boolean).join(" · "))}`, "END:VEVENT"].join("\r\n"));
   for (const d of dayList()) { const date = dayDate(d); if (!date) continue;
     weekItems(d).forEach((x, i) => { if (tmin(x.dep) == null) { ev.push(["BEGIN:VEVENT", `UID:eat-${d}-${i}-${x.k}@eat`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${date.replace(/-/g, "")}`, `SUMMARY:${pad("EAT " + d + " · " + x.t)}`, "END:VEVENT"].join("\r\n")); return; }
       const w = win(x.dep, x.arr), h = m => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
@@ -2294,7 +2486,8 @@ function planningDocPages() {
   const all = tasksSorted(), today = todayISO();
   const pages = [{kicker:"Rétroplanning", head:"EAT " + settings().exercice, title:"Rétroplanning", sub:`Arrêté le ${fmtDate(today)} · ${all.length} tâche${all.length > 1 ? "s" : ""} · ${all.filter(t => t.done).length} terminée${all.filter(t => t.done).length > 1 ? "s" : ""}`, foot:"Rétroplanning", body:gantt(all, true)}];
   chunk(all, 24).forEach((part, i, arr) => { if (!part.length) return; pages.push({kicker:"Rétroplanning", head:"Liste des tâches", title:`Tâches${arr.length > 1 ? ` (${i + 1}/${arr.length})` : ""}`, sub:"", foot:"Rétroplanning",
-    body:`<table><thead><tr><th>Fait</th><th>Tâche</th><th>Phase</th><th>Échéance</th><th>Responsable</th></tr></thead><tbody>${part.map(t => `<tr><td>${t.done ? "✓" : "☐"}</td><td><b>${esc(t.t || "Tâche")}</b>${t.ms ? " <small>(jalon)</small>" : ""}</td><td>${esc(t.phase || "Autre")}</td><td>${t.due ? esc(fmtDate(t.due)) : "—"}${!t.done && t.due && t.due < today ? " <small>en retard</small>" : ""}</td><td>${esc(t.who && S.orgs[t.who] ? S.orgs[t.who].name : "—")}</td></tr>`).join("")}</tbody></table>`}); });
+    body:`<table><thead><tr><th>Fait</th><th>Tâche</th><th>Phase</th><th>Échéance</th><th>Responsable</th></tr></thead><tbody>${part.map(t => `<tr><td>${t.done ? "✓" : "☐"}</td><td><b>${esc(t.t || "Tâche")}</b>${t.ms ? " <small>(jalon)</small>" : ""}</td><td>${esc(t.phase || "Autre")}</td><td>${t.due ? esc(fmtDate(t.due)) : "—"}${!t.done && t.due && t.due < today ? " <small>en retard</small>" : ""}</td><td>${esc(whoNames(t) || "—")}</td></tr>`).join("")}</tbody></table>`}); });
+  if (Object.keys(S.decisions).length) pages.push(...decisionsDocPages());
   return pages;
 }
 function semaineDocPages() {
@@ -3056,7 +3249,7 @@ function vSynthese() {
   const crews = sorted(S.crews).filter(cr => cr.status !== "desiste");
   const upToDate = crews.filter(cr => crewPaid(cr.id) >= (+cr.fee || 0) - .005 && cr.fee > 0).length;
   const res = c.resultat;
-  return `
+  return `${myDueCard()}
   <section class="card hero">
     <div class="hero-main">
       <span class="eyebrow">Résultat prévisionnel</span>
@@ -3790,6 +3983,7 @@ function vOrgs() {
       <div class="org-x">
         <label class="mini" for="o-${o.id}-diet">Régime alimentaire<select class="in ${o.diet ? "" : "unset"}" id="o-${o.id}-diet" data-b="orgs|${o.id}|diet|str">${dietOpts(o.diet)}</select></label>
         <label class="mini" for="o-${o.id}-allergy">Allergies / précisions<input class="in" id="o-${o.id}-allergy" placeholder="Allergies, intolérances…" value="${esc(o.allergy || "")}" data-b="orgs|${o.id}|allergy|str"></label>
+        <label class="mini" for="o-${o.id}-email">E-mail<input class="in" type="email" id="o-${o.id}-email" placeholder="adresse du compte Dashboard" value="${esc(o.email || "")}" data-b="orgs|${o.id}|email|str"></label>
         <label class="tog permis" for="o-${o.id}-permis" title="Les organisateurs avec le permis sont mis au volant en priorité"><input type="checkbox" id="o-${o.id}-permis" data-b="orgs|${o.id}|permis|bool" ${o.permis ? "checked" : ""}>Permis B · conducteur prioritaire</label>
         <button class="lnk" data-act="person" data-v="${esc(o.name || "")}" ${o.name ? "" : "hidden"}>Voir la fiche</button>
       </div>
@@ -3917,6 +4111,7 @@ function vExport() {
     <div class="head-row"><h2 class="h2">Planning et agenda</h2></div>
     <p class="sub">Le rétroplanning et le programme de la semaine en A4, et un fichier agenda à ouvrir sur un téléphone ou dans Google Agenda / Outlook.</p>
     <div class="xrow"><div class="xh"><b>Rétroplanning</b><span class="note">${Object.keys(S.tasks).length} tâche${Object.keys(S.tasks).length > 1 ? "s" : ""} · frise par phase et liste</span></div><div></div><div></div>${btns("planning", "")}</div>
+    <div class="xrow"><div class="xh"><b>Suivi des décisions</b><span class="note">${Object.keys(S.decisions).length} décision${Object.keys(S.decisions).length > 1 ? "s" : ""} · à trancher, tranchées, avec la décision retenue</span></div><div></div><div></div>${btns("decisions", "")}</div>
     <div class="xrow"><div class="xh"><b>Programme de la semaine</b><span class="note">J0 à J6 heure par heure : trajets, services, repas, activités, épreuves</span></div><div></div><div></div>${btns("semaine", "")}</div>
     <div class="xrow"><div class="xh"><b>Agenda (.ics)</b><span class="note">${ics.n} événement${ics.n > 1 ? "s" : ""} : échéances des tâches et semaine de l'EAT (jours datés)</span></div><div></div><div></div><div class="xb"><button class="btn sm primary" data-act="ics" ${dis}>${ICON.dl}Agenda .ics</button></div></div>
   </section>
@@ -4003,6 +4198,7 @@ function vExport() {
       <div class="xb"><label class="btn sm" for="restore-file">Choisir une sauvegarde<input id="restore-file" type="file" accept="application/json,.json" data-restore="1" hidden></label></div>
     </div>
   </section>
+  ${autoBackupsCard()}
   ${logosCard()}
   </div>
   ${can ? "" : `<div class="banner">Le téléchargement n'est pas disponible dans cette vue. L'aperçu et le bouton « Copier » fonctionnent toujours.</div>`}`;
@@ -4615,6 +4811,7 @@ const DOCS = {
   sport:{label:"Classement sportif", file:"Classement_sportif", pages:() => sportDocPages()},
   receipt:{label:"Reçu d'inscription", file:"Recu_inscription", pages:d => receiptPages(d || "all")},
   planning:{label:"Rétroplanning", file:"Retroplanning", pages:() => planningDocPages()},
+  decisions:{label:"Suivi des décisions", file:"Decisions", pages:() => decisionsDocPages()},
   semaine:{label:"Semaine de l'EAT", file:"Programme_semaine", pages:() => semaineDocPages()},
   bilan:{label:"Bilan financier", file:"Bilan_financier", pages:() => bilanDocPages()},
   pack:{label:"Pack étape", file:"Pack_etape", pages:d => (d === "all" ? dayList() : [d]).flatMap(x => [...roadDocPages(x), ...(linesOf("heb").some(n => n.day === x) ? roomsDocPages(x) : []), ...carsDocPages(x)]).concat(dietDocPages())},
@@ -4767,7 +4964,32 @@ async function save(filename, data) {
   catch (e) { if (e && e.code === "declined") return; if (e && e.code === "rate_limited") toast("Une fenêtre de téléchargement est déjà ouverte.", true); else toast("Le téléchargement a échoué.", true); }
 }
 
-const BACKUP_COLS = ["lines","entries","crews","orgs","legs","services","rooms","carplans","events","tasks","agenda","meals","airfields","contacts","logbook","flights","schedule","meta"];
+/* --- sauvegardes automatiques (version en ligne) --- */
+function autoBackupsCard() {
+  if (!SB || CREWMODE || !PROFILE || !canWrite()) return "";
+  if (UI.bkList === undefined) { UI.bkList = null; loadBackups(); }
+  const L = UI.bkList;
+  const when = iso => { const d = new Date(iso); return d.toLocaleDateString("fr-FR", {weekday:"short", day:"2-digit", month:"2-digit", year:"numeric"}) + " · " + d.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"}); };
+  const rowsOf = list => list.map(x => `<div class="xrow"><div class="xh"><b>${esc(when(x.created_at))}</b><span class="note">${x.kind === "manuel" ? "sauvegarde manuelle" : "sauvegarde automatique"} · ${x.n} éléments</span></div><div></div><div></div>
+    <div class="xb"><button class="btn sm" data-act="bkGet" data-v="${x.id}">${ICON.dl}Télécharger</button><button class="btn sm ghost" data-act="bkRestore" data-v="${x.id}">Revenir à cet état</button></div></div>`).join(""), rows = rowsOf(L || []);
+  return `<section class="card">
+    <div class="head-row"><h2 class="h2">Sauvegardes automatiques</h2>${UI.bkErr ? "" : `<button class="btn sm" data-act="bkNow">Sauvegarder maintenant</button>`}</div>
+    <p class="sub">Chaque nuit vers 4 h, une copie complète des données est gardée en ligne pendant 30 jours, avec les 20 dernières sauvegardes manuelles. Tu peux en télécharger une ou revenir à cet état (tu pourras annuler juste après).</p>
+    ${UI.bkErr ? `<div class="banner">Les sauvegardes automatiques ne sont pas encore activées. Dans Supabase, ouvre SQL Editor et lance le fichier <b>3_sauvegardes_et_recap.sql</b>, puis recharge la page.</div>`
+      : L === null ? `<p class="note">Chargement…</p>` : rows ? `<div class="bkl">${UI.bkAll ? rows : rowsOf(L.slice(0, 7))}</div>${L.length > 7 && !UI.bkAll ? `<button class="lnk" data-act="bkAll">Voir les ${L.length} sauvegardes</button>` : ""}` : `<div class="empty"><b>Pas encore de sauvegarde</b>La première sera faite cette nuit. Tu peux aussi cliquer sur « Sauvegarder maintenant ».</div>`}
+  </section>`;
+}
+async function loadBackups() {
+  const {data, error} = await SB.from("backups").select("id,created_at,kind,n").order("created_at", {ascending:false}).limit(60);
+  if (error) { UI.bkErr = error.message || "indisponible"; UI.bkList = []; } else { UI.bkErr = ""; UI.bkList = data || []; }
+  if (location.hash.startsWith("#export")) render();
+}
+async function getBackup(id) {
+  const {data, error} = await SB.from("backups").select("data,created_at").eq("id", id).single();
+  if (error || !data) { toast("Sauvegarde introuvable.", true); return null; }
+  return data;
+}
+const BACKUP_COLS = ["lines","entries","crews","orgs","legs","services","rooms","carplans","events","tasks","decisions","agenda","meals","airfields","contacts","logbook","flights","schedule","meta"];
 function backupJson() { const data = {}; for (const c of BACKUP_COLS) data[c] = JSON.parse(JSON.stringify(S[c] || {})); return JSON.stringify({app:"EAT", version:1, exercice:settings().exercice, date:new Date().toISOString(), data}, null, 1); }
 async function restoreBackup(text) {
   let o; try { o = JSON.parse(text); } catch (_) { toast("Ce fichier n'est pas une sauvegarde lisible.", true); return; }
@@ -5174,6 +5396,8 @@ main.addEventListener("change", e => {
   if (t.dataset.role) { const p = PROFILES.find(x => x.id === t.dataset.role); setRole(t.dataset.role, {role:t.value, crew_id:t.value === "equipage" ? (p && p.crew_id) || null : null}); return; }
   if (t.dataset.rolecrew) { setRole(t.dataset.rolecrew, {crew_id:t.value || null}); return; }
   if (t.dataset.tdwho) { UI.tdWho = t.value; render(); return; }
+  if (t.dataset.me) { LSset("eat-me", t.value); UI.remindDone = false; render(); return; }
+  if (t.dataset.tdco) { const x = S.tasks[t.dataset.tdco]; if (x && t.value) { const co = [...(Array.isArray(x.co) ? x.co : [])]; if (!co.includes(t.value)) co.push(t.value); saveDoc("tasks", t.dataset.tdco, x.who ? {...x, co} : {...x, who:t.value, co:co.filter(y => y !== t.value)}); } return; }
   if (t.dataset.hif) { UI.hiF = t.value; render(); return; }
   if (t.dataset.tdn) { (UI.tdDraft ||= {})[t.dataset.tdn] = t.value; return; }
   if (t.dataset.agn) { (UI.agDraft ||= {})[t.dataset.agn] = t.value; return; }
@@ -5341,6 +5565,7 @@ main.addEventListener("keydown", e => {
 main.addEventListener("keydown", e => {
   if (e.key !== "Enter") return;
   if (e.target.id === "tdn-t") { e.preventDefault(); document.querySelector('[data-act="addTask"]')?.click(); }
+  if (e.target.id === "dcn-t") { e.preventDefault(); document.querySelector('[data-act="addDecision"]')?.click(); }
   if (e.target.id === "agn-t" || e.target.id === "agn-place") { e.preventDefault(); document.querySelector('[data-act="addAgenda"]')?.click(); }
   if (e.target.id === "lgn-t") { e.preventDefault(); document.querySelector('[data-act="addLog"]')?.click(); }
   if (e.target.id === "scn-label" || e.target.id === "scn-amount") { e.preventDefault(); document.querySelector('[data-act="addSch"]')?.click(); }
@@ -5583,6 +5808,27 @@ document.addEventListener("click", async e => {
   else if (act === "toggleRo") { RO = !RO; LSset("eat-ro", RO); toast(RO ? "Mode consultation : rien ne peut être modifié." : "Mode édition."); render(); }
   else if (act === "toggleJust") { const x = S.entries[id]; if (x) saveDoc("entries", id, {...x, just:!x.just}); }
   else if (act === "tdF") { UI.tdF = b.dataset.v; render(); }
+  else if (act === "dcF") { UI.dcF = b.dataset.v; render(); }
+  else if (act === "tdCoDel") { const x = S.tasks[id]; if (x) saveDoc("tasks", id, {...x, co:(x.co || []).filter(y => y !== b.dataset.v)}); }
+  else if (act === "pasteTasks") { pasteTasksBox(); }
+  else if (act === "coConvert") {
+    const ts = sorted(S.tasks).map(t => [t, withCoFromTitle(t)]).filter(x => x[1]);
+    if (!ts.length || !(await confirmBox(`Transformer ${ts.length} « (avec …) » en co-responsables ? Exemple : « ${ts[0][0].t} » devient « ${ts[0][1].t} », avec ${ts[0][1].co.map(x => S.orgs[x].name).join(", ")}.`, "Convertir"))) return;
+    undoBatch = null; for (const [t, n] of ts) await saveDoc("tasks", t.id, {...t, ...n}); toast(`${ts.length} tâche${ts.length > 1 ? "s" : ""} mise${ts.length > 1 ? "s" : ""} à jour.`, false, true);
+  }
+  else if (act === "addDecision") {
+    const t = (document.getElementById("dcn-t") || {}).value || ""; if (!t.trim()) { toast("Écris d'abord la question à trancher.", true); document.getElementById("dcn-t")?.focus(); return; }
+    const order = Object.values(S.decisions).reduce((m, x) => Math.max(m, x.order || 0), 0) + 1;
+    await saveDoc("decisions", newId("decisions"), {order, t:t.trim(), due:document.getElementById("dcn-due").value || "", who:document.getElementById("dcn-who").value || "", st:"ouvert", res:"", at:"", by:""});
+    UI.dcF = "ouvert"; render(); setTimeout(() => document.getElementById("dcn-t")?.focus(), 60);
+  }
+  else if (act === "decConvert") {
+    const ts = sorted(S.tasks).filter(t => /^trancher\s*:/i.test(t.t || "")); if (!ts.length) return;
+    if (!(await confirmBox(`Transformer ${ts.length} tâche${ts.length > 1 ? "s" : ""} « Trancher : … » en décisions ? Elles quittent la to-do list et rejoignent le suivi des décisions.`, "Transformer"))) return;
+    undoBatch = null; let order = Object.values(S.decisions).reduce((m, x) => Math.max(m, x.order || 0), 0);
+    for (const t of ts) { await saveDoc("decisions", newId("decisions"), {order:++order, t:(x => x.charAt(0).toUpperCase() + x.slice(1))(t.t.replace(/^trancher\s*:\s*/i, "")), due:t.due || "", who:t.who || "", st:t.done ? "tranche" : "ouvert", res:"", at:"", by:""}); await removeDoc("tasks", t.id); }
+    UI.dcF = "ouvert"; toast(`${ts.length} décision${ts.length > 1 ? "s" : ""} créée${ts.length > 1 ? "s" : ""}.`, false, true);
+  }
   else if (act === "addTask") {
     const d = UI.tdDraft ||= {}, inp = document.getElementById("tdn-t"); if (inp) d.t = inp.value;
     if (!String(d.t || "").trim()) { toast("Écris d'abord la tâche.", true); inp && inp.focus(); return; }
@@ -5603,7 +5849,7 @@ document.addEventListener("click", async e => {
   }
   else if (act === "delItem") {
     const col = b.dataset.col, x = (S[col] || {})[id]; if (!x) return;
-    const what = {tasks:"la tâche", agenda:"l'activité", airfields:"l'aérodrome", contacts:"le contact", logbook:"l'entrée de la main courante", schedule:"l'échéance"}[col] || "cet élément";
+    const what = {tasks:"la tâche", decisions:"la décision", agenda:"l'activité", airfields:"l'aérodrome", contacts:"le contact", logbook:"l'entrée de la main courante", schedule:"l'échéance"}[col] || "cet élément";
     if (await confirmBox(`Supprimer ${what} « ${x.t || x.name || x.label || x.oaci || "sans nom"} » ?`)) removeDoc(col, id);
   }
   else if (act === "afFromRoute") {
@@ -5611,6 +5857,10 @@ document.addEventListener("click", async e => {
     for (const d of dayList()) if (dayCity(d) && !have.has(d)) saveDoc("airfields", newId("airfields"), {order:++order, day:d, oaci:"", name:"Aérodrome de " + dayCity(d), freq:"", rwy:"", fuel:"", fee:null, hours:"", phone:"", note:""});
   }
   else if (act === "ics") { const r = icsText(); if (!r.n) { toast("Rien à mettre dans l'agenda : ajoute des dates aux tâches ou à la nuit J0.", true); return; } save(`EAT_${settings().exercice}_agenda.ics`, r.text); }
+  else if (act === "bkAll") { UI.bkAll = true; render(); }
+  else if (act === "bkNow") { const {error} = await SB.rpc("backup_now", {p_kind:"manuel"}); if (error) toast("Sauvegarde impossible : " + error.message, true); else { toast("Sauvegarde faite."); loadBackups(); } }
+  else if (act === "bkGet") { const x = await getBackup(b.dataset.v); if (x) save(`EAT_${settings().exercice}_sauvegarde_${String(x.created_at).slice(0, 10)}.json`, JSON.stringify(x.data, null, 1)); }
+  else if (act === "bkRestore") { const x = await getBackup(b.dataset.v); if (x) restoreBackup(JSON.stringify(x.data)); }
   else if (act === "backup") { save(`EAT_${settings().exercice}_sauvegarde_${todayISO()}.json`, backupJson()); }
   else if (act === "person") { personSheet(b.dataset.v); }
   else if (act === "alF") { UI.alF = b.dataset.v; render(); }
@@ -5733,6 +5983,7 @@ function searchIndex() {
   for (const e of sorted(S.events)) add("Épreuve", e.name || "Épreuve", e.day || "", {href:"#sportif"});
   for (const c of CATS) for (const l of linesOf(c.id).filter(l => c.id !== "heb")) add("Budget", l.label || "Poste", c.short, {href:"#budget"});
   for (const t of sorted(S.tasks)) add("Tâche", t.t || "Tâche", [t.phase, t.due ? fmtDate(t.due) : "", t.done ? "faite" : ""].filter(Boolean).join(" · "), {href:"#planning"});
+  for (const d of sorted(S.decisions)) add("Décision", d.t || "Décision", [DEC_ST[d.st || "ouvert"], d.due ? fmtDate(d.due) : ""].filter(Boolean).join(" · "), {href:"#planning"});
   for (const c of sorted(S.contacts)) add("Contact", c.name || "Contact", [c.type, c.phone, c.who].filter(Boolean).join(" · "), {href:"#contacts"});
   for (const a of sorted(S.airfields)) add("Aérodrome", [a.oaci, a.name].filter(Boolean).join(" · ") || "Aérodrome", [a.day, a.freq].filter(Boolean).join(" · "), {href:"#aerodromes"});
   for (const x of sorted(S.logbook)) add("Main courante", x.t || "Événement", [x.type, x.at ? x.at.replace("T", " ") : ""].filter(Boolean).join(" · "), {href:"#maincourante"});
@@ -5782,6 +6033,7 @@ function gsGo(i) {
 window.addEventListener("hashchange", () => { tip.classList.remove("on"); render(); window.scrollTo(0, 0); });
 applyMode();
 render();
+if (window.__SEED || window.__SUPA_MOCK) window.__T = {S, whoNames, meOrg, parseTaskLines};
 boot();
 })();
 </script>
