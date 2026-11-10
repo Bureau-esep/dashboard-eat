@@ -4797,16 +4797,92 @@ const GANTT_CSS = `.gantt{font:400 12.5px/1.3 "DM Sans",Arial,sans-serif;color:#
 .gantt .g-ms.done{background:#9A9AB2}
 .gantt .g-ms.late{background:#C62828}
 `;
-function docCss() { return DOC_CSS + ROOM_CSS + CAR_DOC_CSS + GANTT_CSS.replace(/(^|\n)\.gantt/g, "$1.doc .gantt"); }
+const DOC_CSS_C = `
+.doc .pg.cpg{flex-direction:row;font-size:13px}
+.doc .cs{width:62px;flex:none;background:#0B1530;color:#fff;display:flex;flex-direction:column;align-items:center;padding:18px 0;gap:16px;border-right:5px solid #FA9A06;position:relative;z-index:2}
+.doc .cs img{width:40px;height:40px;object-fit:contain}
+.doc .cs-v{writing-mode:vertical-rl;transform:rotate(180deg);font:700 20px/1 "Oswald","Arial Narrow",Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;flex:1;text-align:left;white-space:nowrap;overflow:hidden}
+.doc .cs-n{display:flex;flex-direction:column;align-items:center;font:600 22px/1 "Oswald","Arial Narrow",Arial,sans-serif}.doc .cs-n span{font-size:10px;color:#A9ACC4}
+.doc .cm{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
+.doc .cm>.wmk{position:absolute;left:50%;top:52%;width:470px;height:470px;object-fit:contain;transform:translate(-50%,-50%);opacity:.06;pointer-events:none;z-index:0}
+.doc .cm>header,.doc .cm>.pg-b,.doc .cm>footer{position:relative;z-index:1}
+.doc .ch{display:flex;justify-content:space-between;align-items:center;padding:16px 30px 0}
+.doc .ck{font:700 10px/1 "DM Sans",Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#01002C;background:#FFE7BF;padding:5px 8px}
+.doc .cx{font:700 8.5px/1 "DM Sans",Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#9A9AB2}
+.doc .pg-b{padding:14px 30px 16px;gap:14px}
+.doc .ct h1{font-size:34px}
+.doc .pg-b h2{font-size:15px;border-bottom:3px solid #01002C;display:flex;align-items:center;gap:8px}
+.doc .pg-b h2::before{content:"";width:12px;height:12px;background:#FA9A06;display:inline-block;flex:none}
+.doc table{font-size:13px}
+.doc th{font-size:10px;padding:8px}
+.doc td{padding:8px;border-bottom:1px solid #C9CCDA}
+.doc td:first-child{font-weight:700;font-variant-numeric:tabular-nums}
+.doc tr:nth-child(even) td{background:rgba(238,240,247,.85)}
+.doc .retenir{background:#01002C;color:#fff;font-size:13.5px;padding:12px 16px;border-left:8px solid #FA9A06}
+.doc .retenir b{color:#FA9A06}
+.doc .kf b{font-size:28px}
+.doc .room .rh b{font-size:17px}.doc .room li{font-size:13.5px}
+.doc .cf{display:flex;justify-content:space-between;gap:12px;padding:10px 30px 14px;border-top:2px solid #01002C;font:700 9.5px/1.3 "DM Sans",Arial,sans-serif;color:#4B4B68;letter-spacing:.04em;margin-top:auto}
+.doc .pg.dark .ck{background:#FA9A06}.doc .pg.dark .cx,.doc .pg.dark .cf{color:#A9ACC4}.doc .pg.dark .cf{border-top-color:#22305A}.doc .pg.dark .cm>.wmk{opacity:.08}
+.doc .pg.dark .pg-b h2{border-bottom-color:#FA9A06}
+`;
+function docCss() { return DOC_CSS + ROOM_CSS + CAR_DOC_CSS + GANTT_CSS.replace(/(^|\n)\.gantt/g, "$1.doc .gantt") + DOC_CSS_C; }
 { const st = document.createElement("style"); st.textContent = GANTT_CSS; document.head.appendChild(st); }
 function docPage({kicker, head, title, sub, body, foot, cls}, i, n) {
   const b = brand(), st = settings();
-  return `<section class="pg ${cls || ""}">
-    <header class="pg-h">${b.aero ? `<span class="lg"><img src="${b.aero}" alt=""></span>` : ""}<div class="wm">EIGS'AERO<small>EAT ${esc(st.exercice)} · ESEP</small></div>
-      <div class="ttl"><div class="k">${esc(kicker)}</div><div class="v">${esc(head)}</div></div></header>
-    <div class="pg-b">${title ? `<div><h1>${title}</h1>${sub ? `<div class="st">${sub}</div>` : ""}</div>` : ""}${body}</div>
-    <footer class="pg-f"><span class="esep">${b.esep ? `<img src="${b.esep}" alt="">` : ""}<span><b>Un projet de l'ESEP</b><br>EIGSI Students Engineering Projects</span></span><span>${esc(foot || "")} · édité le ${fmtDate(todayISO())}</span><span>page ${i + 1} / ${n}</span></footer>
+  return `<section class="pg cpg ${cls || ""}">
+    <aside class="cs">${b.aero ? `<img src="${b.aero}" alt="">` : ""}<div class="cs-v">${esc(head)}</div><div class="cs-n"><b>${i + 1}</b><span>/${n}</span></div></aside>
+    <div class="cm">${b.esep ? `<img class="wmk" src="${b.esep}" alt="">` : ""}
+      <header class="ch"><span class="ck">${esc(kicker)}</span><span class="cx">EAT ${esc(st.exercice)} · EIGS'AERO · ESEP</span></header>
+      <div class="pg-b">${title ? `<div class="ct"><h1>${title}</h1>${sub ? `<div class="st">${sub}</div>` : ""}</div>` : ""}${body}</div>
+      <footer class="cf"><span>${esc(foot || "")} · édité le ${fmtDate(todayISO())}</span><span>Un projet de l'ESEP · EIGSI Students Engineering Projects</span></footer>
+    </div>
   </section>`;
+}
+/* découpe les pages trop longues : la suite passe sur une nouvelle page, avec l'en-tête du tableau */
+function paginateDoc(host) {
+  const H = 1123 + 2, pages = () => [...host.querySelectorAll(".pg")];
+  const tooTall = pg => pg.getBoundingClientRect().height > H;
+  const LIST = "tbody,.cdoc,.rooms,.diet";
+  const listOf = el => el.matches(".cdoc,.rooms") ? el : el.matches("table") ? el.querySelector("tbody") : el.querySelector(":scope > table > tbody, :scope > div > table > tbody, :scope > .cdoc, :scope > .rooms, :scope > div > .rooms");
+  for (let k = 0, guard = 0; k < pages().length && guard < 400; k++, guard++) {
+    const pg = pages()[k]; if (!tooTall(pg)) continue;
+    const body = pg.querySelector(".pg-b"); if (!body) continue;
+    const fit = () => { for (let t = 0; t < 4 && tooTall(pg); t++) { const bh = body.getBoundingClientRect().height, over = pg.getBoundingClientRect().height - 1123; body.style.zoom = Math.max(.55, (+(body.style.zoom || 1)) * (bh - over - 6) / bh).toFixed(3); } };
+    if (pg.getBoundingClientRect().height <= 1123 * 1.1) { fit(); if (!tooTall(pg)) continue; body.style.zoom = ""; }
+    const next = pg.cloneNode(true), nb = next.querySelector(".pg-b"); nb.innerHTML = "";
+    const kids = () => [...body.children].filter(x => !x.classList.contains("ct") && x.tagName !== "STYLE");
+    let moved = 0;
+    while (tooTall(pg) && kids().length) {
+      const el = kids()[kids().length - 1], list = listOf(el), units = list ? [...list.children] : [];
+      if (units.length > 1) {
+        const cl = el.cloneNode(true), cList = listOf(cl); [...cList.children].forEach(r => r.remove());
+        const h2 = cl.querySelector("h2"); if (h2 && !/\(suite\)$/.test(h2.textContent)) h2.append(" (suite)");
+        nb.prepend(cl);
+        const ph = el.matches("table") && el.previousElementSibling && el.previousElementSibling.matches("h2,h3") ? el.previousElementSibling.cloneNode(true) : null;
+        if (ph) { if (!/\(suite\)$/.test(ph.textContent)) ph.append(" (suite)"); cl.before(ph); }
+        for (let r = units.length - 1; r >= 1 && tooTall(pg); r--) { cList.prepend(units[r]); moved++; }
+        if (tooTall(pg)) { cl.remove(); if (ph) ph.remove(); [...cList.children].forEach(r => list.appendChild(r)); nb.prepend(el); moved++; }
+        else break;
+      } else if (kids().length > 1) { nb.prepend(el); moved++; }
+      else break;
+    }
+    { let last; while (kids().length > 1 && (last = kids()[kids().length - 1]) && /^H[1-4]$/.test(last.tagName)) { nb.prepend(last); moved++; } }
+    if (moved && nb.children.length) pg.after(next);
+    if (tooTall(pg)) fit();   // bloc indivisible (frise, grand tableau) : on le réduit pour tenir sur la page
+  }
+  const all = pages(); all.forEach((pg, i) => { const nn = pg.querySelector(".cs-n"); if (nn) nn.innerHTML = `<b>${i + 1}</b><span>/${all.length}</span>`; });
+}
+async function laidOutDoc(pages) {
+  const host = document.createElement("div");
+  host.className = "snap-host"; host.style.width = "794px";
+  host.innerHTML = `<style>${docCss()}</style>${buildDoc(pages)}`;
+  document.body.appendChild(host);
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  await Promise.all([...host.querySelectorAll("img")].map(im => im.decode().catch(() => {})));
+  try { await document.fonts.ready; } catch (_) {}
+  paginateDoc(host);
+  return host;
 }
 const chunk = (arr, n) => { const out = []; for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n)); return out.length ? out : [[]]; };
 
@@ -4994,7 +5070,7 @@ function dietDocPages() {
 }
 
 function buildDoc(pages) { return `<div class="doc">${pages.map((p, i) => docPage(p, i, pages.length)).join("")}</div>`; }
-function docHtmlFile(pages, title) {
+function docHtmlFile(pages, title, inner) {
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,700&display=swap" rel="stylesheet">
 <style>body{margin:0;background:#D9DBE6;padding:24px 0}${docCss()}
@@ -5003,17 +5079,12 @@ function docHtmlFile(pages, title) {
 .printbar button{all:unset;cursor:pointer;background:#FA9A06;color:#01002C;padding:8px 14px}
 @page{size:A4 portrait;margin:0}
 @media print{body{background:#fff;padding:0}.printbar{display:none}.pg{margin:0;box-shadow:none;break-after:page;min-height:297mm;width:210mm}}
-</style></head><body><div class="printbar">${esc(title)} <button onclick="window.print()">Imprimer / enregistrer en PDF</button></div>${buildDoc(pages)}</body></html>`;
+</style></head><body><div class="printbar">${esc(title)} <button onclick="window.print()">Imprimer / enregistrer en PDF</button></div>${inner ? `<div class="doc">${inner}</div>` : buildDoc(pages)}</body></html>`;
 }
 async function snapDocPages(pages) {
-  const host = document.createElement("div");
-  host.className = "snap-host"; host.style.width = "794px";
-  host.innerHTML = `<style>${docCss()}</style>${buildDoc(pages)}`;
-  document.body.appendChild(host);
+  const host = await laidOutDoc(pages);
   const out = [];
   try {
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-    await Promise.all([...host.querySelectorAll("img")].map(im => im.decode().catch(() => {})));
     const css = docCss().replace(/&/g, "&amp;").replace(/</g, "&lt;");
     for (const pg of host.querySelectorAll(".pg")) {
       const W = 794, H = Math.ceil(pg.getBoundingClientRect().height);
@@ -5084,7 +5155,7 @@ async function exportDoc(kind, day, fmt) {
   const tag = String(day || "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^\w-]+/g, "_");
   const base = `EAT_${settings().exercice}_${D.file}${day && day !== "all" ? "_" + tag : day === "all" ? (kind === "person" ? "_tout_le_monde" : "_toutes_etapes") : ""}`;
   const title = `EAT ${settings().exercice} · ${D.label}${day && day !== "all" ? " · " + day : ""}`;
-  if (fmt === "html") return save(base + ".html", docHtmlFile(pages, title));
+  if (fmt === "html") { const host = await laidOutDoc(pages); const inner = host.querySelector(".doc").innerHTML; host.remove(); return save(base + ".html", docHtmlFile(pages, title, inner)); }
   if (busy) return; busy = true;
   toast("Préparation du PDF…");
   try { await save(base + ".pdf", pdfPortrait(await snapDocPages(pages))); }
@@ -5103,6 +5174,7 @@ function showPreview(kind, day) {
   const pages = DOCS[kind].pages(day);
   const m = $("#modal");
   m.innerHTML = `<div class="scrim prev"><div class="prevbox" role="dialog" aria-modal="true" aria-label="Aperçu"><div class="prevbar"><b>Aperçu · ${esc(DOCS[kind].label)}</b><button class="btn sm" data-m="close">Fermer</button></div><div class="prevpages"><style>${docCss()}</style>${buildDoc(pages)}</div></div></div>`;
+  { const pp = m.querySelector(".prevpages"); if (pp) requestAnimationFrame(() => requestAnimationFrame(() => { try { paginateDoc(pp); } catch (_) {} })); }
   m.onclick = e => { if (e.target.closest('[data-m="close"]') || e.target.classList.contains("scrim")) { m.innerHTML = ""; } };
 }
 
@@ -6301,7 +6373,7 @@ function gsGo(i) {
 window.addEventListener("hashchange", () => { tip.classList.remove("on"); render(); window.scrollTo(0, 0); });
 applyMode();
 render();
-if (window.__SEED || window.__SUPA_MOCK) window.__T = {S, whoNames, meOrg, parseTaskLines, EDITING, markEditing};
+if (window.__SEED || window.__SUPA_MOCK) window.__T = {S, whoNames, meOrg, parseTaskLines, EDITING, markEditing, DOCS, docPage, docCss, brand, settings, laidOutDoc};
 boot();
 })();
 </script>
