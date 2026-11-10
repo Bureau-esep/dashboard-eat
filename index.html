@@ -791,6 +791,12 @@ body *{border-radius:0!important}
 .mdl li a{font-weight:600;color:var(--ink);text-decoration:none}.mdl li a:hover{text-decoration:underline}
 .mdl li span{color:var(--ink-2);font-size:13px}.mdl .neg{color:var(--crit)}
 .dlg.wide{max-width:760px}
+.vp .note{margin-top:4px;max-width:340px}
+.vp-box{margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--sheet-2);display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;min-width:320px;max-width:620px}
+.vp-box fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.vp-box legend{font:700 10.5px/1.4 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin-bottom:2px}
+.vp-box .tog{font-size:13px;display:flex;gap:6px;align-items:center}.vp-box .tog small{color:var(--warn-ink)}
+.vp-box .row,.vp-box>.note{grid-column:1/-1}.vp-box .row{display:flex;justify-content:space-between;align-items:center}
 .pth{background:var(--sheet-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:12.5px/1.45 var(--mono,monospace);white-space:pre-wrap;margin:0}
 #pt-txt{font:13px/1.45 var(--mono,monospace);resize:vertical}
 .ptp{max-height:260px;overflow:auto;margin-top:10px}
@@ -1586,7 +1592,9 @@ function applyMode() {
 function currentView() {
   const [h, sub] = (location.hash || "").replace("#", "").split("/");
   if (h === "deplacements" && sub && MV_TABS[sub] && UI.mv !== sub) { UI.mv = sub; LSset("eat-mv", sub); }
-  return VIEWS.some(v => v.id === h) ? h : h === "regimes" ? "annuaire" : "synthese";
+  const r = VIEWS.some(v => v.id === h) ? h : h === "regimes" ? "annuaire" : "synthese";
+  const a = allowedViews(); if (a && !a.includes(r)) return a[0] || "__none";
+  return r;
 }
 let rq = false;
 let selBusy = false, pending = false;
@@ -1608,10 +1616,12 @@ function doRender() {
   }
   const v = currentView();
   const st = settings();
-  { const sp = spaceOf(v), last = LS("eat-sub", {}); if (last[sp.id] !== v) { last[sp.id] = v; LSset("eat-sub", last); }
-    const nAl = allIssues().filter(x => x.k === "crit" || x.k === "warn").length;
+  if (v === "__none") { $("#tabs").innerHTML = ""; $("#main").innerHTML = `<section class="card"><h2 class="h2">Bienvenue</h2><div class="empty"><b>Aucun onglet ouvert pour l'instant</b>Ton compte est un compte « Lecteur simple ». Le responsable du Dashboard doit t'ouvrir les onglets que tu peux consulter. Recharge la page ensuite.</div></section>`; return; }
+  { const AV = allowedViews(), SP = AV ? SPACES.map(x => ({...x, views:x.views.filter(id => AV.includes(id))})).filter(x => x.views.length) : SPACES;
+    const sp = SP.find(x => x.views.includes(v)) || SP[0], last = LS("eat-sub", {}); if (last[sp.id] !== v) { last[sp.id] = v; LSset("eat-sub", last); }
+    const nAl = viewOk("alertes") ? allIssues().filter(x => x.k === "crit" || x.k === "warn").length : 0;
     const badge = id => id === "alertes" && nAl ? `<span class="nb">${nAl}</span>` : "";
-    $("#tabs").innerHTML = `<div class="spaces">${SPACES.map((x, i) => `<a href="#${x.views.includes(last[x.id]) ? last[x.id] : x.views[0]}" ${x.id === sp.id ? 'aria-current="page"' : ""}><span class="n">0${i + 1}</span>${x.l}${x.id === "pilotage" && nAl ? `<span class="nb">${nAl}</span>` : ""}</a>`).join("")}</div>`
+    $("#tabs").innerHTML = `<div class="spaces">${SP.map(x => `<a href="#${x.views.includes(last[x.id]) ? last[x.id] : x.views[0]}" ${x.id === sp.id ? 'aria-current="page"' : ""}><span class="n">0${SPACES.findIndex(y => y.id === x.id) + 1}</span>${x.l}${x.id === "pilotage" && nAl ? `<span class="nb">${nAl}</span>` : ""}</a>`).join("")}</div>`
       + (sp.views.length > 1 ? `<div class="subs">${sp.views.filter(id => id !== "droits" || (SB && PROFILE && PROFILE.role === "superadmin")).map(id => `<a href="#${id}" ${id === v ? 'aria-current="page"' : ""}>${esc(viewLabel(id))}${badge(id)}</a>`).join("")}</div>` : ""); }
   { const x = document.getElementById("exo"); if (x) x.textContent = st.exercice || ""; }
   { const ls = $("#logo-esep"), bl = brand().esep; if (bl) { if (ls.dataset.src !== bl.slice(0, 64) + bl.length) { ls.innerHTML = `<img src="${bl}" alt="ESEP">`; ls.dataset.src = bl.slice(0, 64) + bl.length; } ls.classList.add("on"); } else { ls.innerHTML = ""; ls.classList.remove("on"); } }
@@ -1622,7 +1632,7 @@ function doRender() {
   let sel = null; try { if (fid && a.selectionStart != null) sel = [a.selectionStart, a.selectionEnd]; } catch (_) {}
   const sy = window.scrollY;
   const banner = S.src === "local" ? `<div class="banner">${window.EAT_CONFIG ? "Mode démo : la connexion au serveur a échoué. Recharge la page ; si le message reste, vérifie ta connexion internet." : "Mode démo : l'enregistrement en ligne n'est pas disponible dans cette vue (connecte-toi à claude.ai). Tes modifications ne seront pas conservées."}</div>` : "";
-  const bar = v === "export" ? "" : `<div class="pagebar"><span class="eyebrow">${esc(viewLabel(v))}<span class="foldall"><button class="lnk" data-act="foldAll" data-v="1">Tout replier</button> · <button class="lnk" data-act="foldAll" data-v="0">Tout déplier</button></span></span><a class="lnk exp-lnk" href="#export">Exports →</a></div>`;
+  const bar = v === "export" ? "" : `<div class="pagebar"><span class="eyebrow">${esc(viewLabel(v))}<span class="foldall"><button class="lnk" data-act="foldAll" data-v="1">Tout replier</button> · <button class="lnk" data-act="foldAll" data-v="0">Tout déplier</button></span></span>${viewOk("export") ? `<a class="lnk exp-lnk" href="#export">Exports →</a>` : ""}</div>`;
   $("#main").innerHTML = banner + bar + ({synthese:vSynthese, planning:vPlanning, alertes:vAlertes, historique:vHistorique, bilan:vBilan, contacts:vContacts, droits:vDroits, repas:vRepas, aerodromes:vAerodromes, semaine:vSemaine, vols:vVols, maincourante:vLog, tresorerie:vTreso, annuaire:vAnnuaire, budget:vBudget, hebergement:vHeb, saisie:vSaisie, equipages:vCrews, organisateurs:vOrgs, deplacements:vMoves, sportif:vSport, scenarios:vScn, export:vExport}[v])();
   if (fid) { const n = document.getElementById(fid); if (n) { n.focus({preventScroll:true}); if (sel) try { n.setSelectionRange(sel[0], sel[1]); } catch (_) {} } }
   decorateCards(v);
@@ -2990,9 +3000,24 @@ function openGuide(i = 0) {
 
 /* ================= version en ligne (Netlify + Supabase) : connexion, droits, espace équipage ================= */
 let SB = null, PROFILE = null, PROFILES = [], CREWMODE = false, AUTHVIEW = "", CREWVIEW = null, UPLOADS = [];
-const ROLES_L = {superadmin:"Super-administrateur", admin:"Organisateur", lecteur:"Lecteur", equipage:"Équipage", attente:"En attente"};
-const ROLES_D = {superadmin:"Tout voir, tout modifier, et gérer les droits de chacun (une seule personne).", admin:"Tout voir et tout modifier.", lecteur:"Tout voir, sans rien pouvoir modifier.", equipage:"Voir uniquement les informations de son équipage et déposer ses documents.", attente:"Aucun accès tant que les droits ne sont pas attribués."};
+const ROLES_L = {superadmin:"Super-administrateur", admin:"Organisateur", lecteur:"Lecteur superviseur", lecteur_simple:"Lecteur simple", equipage:"Équipage", attente:"En attente"};
+const ROLES_D = {superadmin:"Tout voir, tout modifier, et gérer les droits de chacun (une seule personne).", admin:"Tout voir et tout modifier.", lecteur:"Tout voir, sans rien pouvoir modifier.", lecteur_simple:"Voir uniquement les onglets que tu lui ouvres, sans rien modifier. Aucun onglet au départ.", equipage:"Voir uniquement les informations de son équipage et déposer ses documents.", attente:"Aucun accès tant que les droits ne sont pas attribués."};
 const isStaff = () => PROFILE && ["superadmin", "admin", "lecteur"].includes(PROFILE.role);
+/* --- lecteur simple : onglets ouverts un par un --- */
+const ALL_COLS = ["lines","entries","crews","orgs","legs","services","rooms","carplans","events","tasks","decisions","agenda","meals","airfields","contacts","logbook","flights","schedule","portal","meta","history"];
+const BUD_COLS = ["lines","entries","crews","orgs","schedule","legs","services","rooms","events"];
+const VIEW_COLS = {synthese:"all", alertes:"all", historique:"all", export:"all",
+  planning:["tasks","decisions","orgs","lines"], scenarios:BUD_COLS, budget:BUD_COLS, saisie:BUD_COLS, tresorerie:BUD_COLS, bilan:BUD_COLS,
+  annuaire:["crews","orgs","contacts","lines","rooms","legs","services","carplans"], equipages:["crews","entries","orgs","lines","portal","events"],
+  organisateurs:["orgs","lines","legs","services","crews"], contacts:["contacts","orgs","lines"],
+  semaine:["legs","services","meals","agenda","events","lines","orgs","crews","carplans","airfields"], hebergement:["lines","rooms","crews","orgs"],
+  deplacements:["legs","services","carplans","crews","orgs","lines"], repas:["meals","lines","crews","orgs"], aerodromes:["airfields","lines"],
+  vols:["flights","crews","legs","lines","airfields"], maincourante:["logbook","orgs","lines","crews"], sportif:["events","crews","lines"]};
+const VIEW_ALL_NOTE = {synthese:1, alertes:1, historique:1, export:1};
+const colsForViews = views => { const set = new Set(["meta"]); for (const v of views) { const c = VIEW_COLS[v]; if (c === "all") return ALL_COLS.slice(); for (const x of c || []) set.add(x); } return [...set]; };
+const isSimple = () => !!(SB && PROFILE && PROFILE.role === "lecteur_simple");
+const allowedViews = () => isSimple() ? (Array.isArray(PROFILE.views) ? PROFILE.views : []).filter(v => v !== "droits" && VIEWS.some(x => x.id === v)) : null;
+const viewOk = v => { const a = allowedViews(); return !a || a.includes(v); };
 const canWrite = () => PROFILE && ["superadmin", "admin"].includes(PROFILE.role);
 const sbUid = () => "x" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 function sbErr(e) { const m = String((e && (e.message || e.code)) || ""); return (e && (e.code === "42501" || /row-level security|permission/i.test(m))) ? {code:"invalid_argument", message:m} : {code:"unavailable", message:m}; }
@@ -3050,7 +3075,7 @@ async function afterLogin(session) {
   if (PROFILE.role === "equipage") { CREWMODE = true; document.documentElement.classList.add("portal-mode"); S.src = "db"; await loadCrewSpace(); return; }
   DB = supaDB(SB);
   USER = {id:async () => ME, canEdit:() => canWrite(), isOwner:() => PROFILE.role === "superadmin", profiles:async ids => Object.fromEntries(ids.map(id => [id, {name:(PROFILES.find(p => p.id === id) || {}).name || (PROFILES.find(p => p.id === id) || {}).email || ""}]))};
-  if (PROFILE.role === "lecteur") { RO = true; document.documentElement.classList.add("lecteur"); }
+  if (PROFILE.role === "lecteur" || PROFILE.role === "lecteur_simple") { RO = true; document.documentElement.classList.add("lecteur"); }
   await loadProfiles(); loadUploads();
   SB.channel("staff-rt").on("postgres_changes", {event:"*", schema:"public", table:"uploads"}, () => loadUploads()).on("postgres_changes", {event:"*", schema:"public", table:"profiles"}, () => loadProfiles().then(render)).subscribe();
   startData();
@@ -3115,13 +3140,23 @@ function vDroits() {
     <div class="head-row"><h2 class="h2">Comptes et droits</h2>${pend ? `<span class="chip warn">${pend} compte${pend > 1 ? "s" : ""} à valider</span>` : ""}</div>
     <p class="sub">Chacun crée son compte depuis l'écran de connexion. Il arrive « En attente » : choisis ici son rôle, et pour un équipage, l'équipage auquel il est rattaché. Tu es le seul à pouvoir modifier les droits.</p>
     <ul class="roles">${Object.entries(ROLES_D).map(([k, d]) => `<li><b>${ROLES_L[k]}</b> : ${esc(d)}</li>`).join("")}</ul>
-    <div class="scroll"><table class="tbl"><thead><tr><th>Personne</th><th>Rôle</th><th>Équipage</th><th>Créé le</th></tr></thead><tbody>
+    <div class="scroll"><table class="tbl"><thead><tr><th>Personne</th><th>Rôle</th><th>Équipage ou onglets ouverts</th><th>Créé le</th></tr></thead><tbody>
     ${PROFILES.map(p => `<tr class="${p.role === "attente" ? "pend" : ""}"><td><b>${esc(p.name || "—")}</b><div class="note">${esc(p.email || "")}</div></td>
       <td>${p.id === ME ? `<b>${ROLES_L[p.role]}</b><div class="note">toi</div>` : `<select class="in" id="rl-${p.id}" data-role="${p.id}" aria-label="Rôle de ${esc(p.name || p.email || "")}">${Object.entries(ROLES_L).filter(([k]) => k !== "superadmin").map(([k, l]) => `<option value="${k}" ${p.role === k ? "selected" : ""}>${l}</option>`).join("")}</select>`}</td>
-      <td>${p.role === "equipage" ? `<select class="in" id="rc-${p.id}" data-rolecrew="${p.id}" aria-label="Équipage de ${esc(p.name || "")}"><option value="">Choisir…</option>${crews.map(c => `<option value="${c.id}" ${p.crew_id === c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select>` : `<span class="note">—</span>`}</td>
+      <td>${p.role === "equipage" ? `<select class="in" id="rc-${p.id}" data-rolecrew="${p.id}" aria-label="Équipage de ${esc(p.name || "")}"><option value="">Choisir…</option>${crews.map(c => `<option value="${c.id}" ${p.crew_id === c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select>` : p.role === "lecteur_simple" ? viewsPicker(p) : p.role === "lecteur" ? `<span class="note">tous les onglets, en lecture</span>` : `<span class="note">—</span>`}</td>
       <td>${p.created_at ? esc(new Date(p.created_at).toLocaleDateString("fr-FR")) : ""}</td></tr>`).join("")}</tbody></table></div>
   </section>`;
 }
+function viewsPicker(p) {
+  const on = new Set(Array.isArray(p.views) ? p.views : []), n = [...on].filter(v => v !== "droits").length;
+  const open = UI.vpOpen === p.id;
+  return `<div class="vp"><button class="btn sm ${n ? "" : "ghost"}" data-act="vpOpen" data-id="${p.id}" aria-expanded="${open}">${n ? `${n} onglet${n > 1 ? "s" : ""} ouvert${n > 1 ? "s" : ""}` : "Aucun onglet"} · modifier</button>
+    ${n && !open ? `<div class="note">${[...on].filter(v => v !== "droits").map(v => esc(viewLabel(v))).join(", ")}</div>` : ""}
+    ${open ? `<div class="vp-box">${SPACES.map(sp => { const vs = sp.views.filter(v => v !== "droits"); return vs.length ? `<fieldset><legend>${esc(sp.l)}</legend>${vs.map(v => `<label class="tog"><input type="checkbox" id="vp-${p.id}-${v}" data-rview="${p.id}|${v}" ${on.has(v) ? "checked" : ""}>${esc(viewLabel(v))}${VIEW_ALL_NOTE[v] ? ` <small title="Cet onglet a besoin de toutes les données">· toutes les données</small>` : ""}</label>`).join("")}</fieldset>` : ""; }).join("")}
+      <div class="row"><button class="lnk" data-act="vpNone" data-id="${p.id}">Tout fermer</button><button class="btn sm primary" data-act="vpOpen" data-id="">Terminé</button></div>
+      <p class="note">Il ne voit que les données utiles à ces onglets, sans pouvoir rien modifier. « Toutes les données » : l'onglet affiche des chiffres de tout l'outil, donc il lui donne accès à tout.</p></div>` : ""}</div>`;
+}
+async function setViews(id, views) { await setRole(id, {views, cols:colsForViews(views)}); }
 async function setRole(id, patch) {
   const {error} = await SB.from("profiles").update(patch).eq("id", id);
   if (error) { toast("Modification refusée : " + error.message, true); return; }
@@ -5394,6 +5429,7 @@ main.addEventListener("change", e => {
   const t = e.target;
   if (t.dataset.upload) { doUpload(t); return; }
   if (t.dataset.role) { const p = PROFILES.find(x => x.id === t.dataset.role); setRole(t.dataset.role, {role:t.value, crew_id:t.value === "equipage" ? (p && p.crew_id) || null : null}); return; }
+  if (t.dataset.rview) { const [pid, v] = t.dataset.rview.split("|"), p = PROFILES.find(x => x.id === pid); if (!p) return; const cur = new Set(Array.isArray(p.views) ? p.views : []); t.checked ? cur.add(v) : cur.delete(v); setViews(pid, VIEWS.map(x => x.id).filter(x => cur.has(x))); return; }
   if (t.dataset.rolecrew) { setRole(t.dataset.rolecrew, {crew_id:t.value || null}); return; }
   if (t.dataset.tdwho) { UI.tdWho = t.value; render(); return; }
   if (t.dataset.me) { LSset("eat-me", t.value); UI.remindDone = false; render(); return; }
@@ -5804,10 +5840,12 @@ document.addEventListener("click", async e => {
     removeDoc("schedule", id); clearTimeout(undoToastT);
     toast(`Passé dans le journal${x.lineId ? "" : " (vérifie le poste du budget dans Saisie)"}.`, false, true);
   }
-  else if (act === "toggleRo" && PROFILE && PROFILE.role === "lecteur") { toast("Ton compte est en lecture seule."); }
+  else if (act === "toggleRo" && PROFILE && (PROFILE.role === "lecteur" || PROFILE.role === "lecteur_simple")) { toast("Ton compte est en lecture seule."); }
   else if (act === "toggleRo") { RO = !RO; LSset("eat-ro", RO); toast(RO ? "Mode consultation : rien ne peut être modifié." : "Mode édition."); render(); }
   else if (act === "toggleJust") { const x = S.entries[id]; if (x) saveDoc("entries", id, {...x, just:!x.just}); }
   else if (act === "tdF") { UI.tdF = b.dataset.v; render(); }
+  else if (act === "vpOpen") { UI.vpOpen = id || ""; render(); }
+  else if (act === "vpNone") { setViews(id, []); }
   else if (act === "dcF") { UI.dcF = b.dataset.v; render(); }
   else if (act === "tdCoDel") { const x = S.tasks[id]; if (x) saveDoc("tasks", id, {...x, co:(x.co || []).filter(y => y !== b.dataset.v)}); }
   else if (act === "pasteTasks") { pasteTasksBox(); }
@@ -5997,7 +6035,7 @@ function gsRender() {
   const inp = $("#gsearch"), pop = $("#gs-pop"), q = fold(inp.value);
   if (!q) { pop.hidden = true; return; }
   const words = q.split(/\s+/).filter(Boolean);
-  GS.items = searchIndex().filter(x => words.every(w => x.f.includes(w))).slice(0, 12);
+  GS.items = searchIndex().filter(x => words.every(w => x.f.includes(w)) && (!x.go || !x.go.href ? viewOk("annuaire") : viewOk(x.go.href.replace("#", "").split("/")[0]))).slice(0, 12);
   if (GS.idx >= GS.items.length) GS.idx = 0;
   pop.innerHTML = GS.items.length ? GS.items.map((x, i) => `<div class="gs-o ${i === GS.idx ? "on" : ""}" role="option" data-i="${i}" aria-selected="${i === GS.idx}"><span class="gs-t">${esc(x.type)}</span><b>${esc(x.label)}</b><small>${esc(x.sub || "")}</small></div>`).join("") : `<div class="gs-e">Aucun résultat pour « ${esc(inp.value)} »</div>`;
   pop.hidden = false;
