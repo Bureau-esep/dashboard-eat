@@ -795,6 +795,15 @@ body *{border-radius:0!important}
 .mdl li a{font-weight:600;color:var(--ink);text-decoration:none}.mdl li a:hover{text-decoration:underline}
 .mdl li span{color:var(--ink-2);font-size:13px}.mdl .neg{color:var(--crit)}
 .dlg.wide{max-width:760px}
+.olk{position:relative}
+.olk>summary{list-style:none}
+.olk>summary::-webkit-details-marker{display:none}
+.olk-menu{position:absolute;left:0;bottom:calc(100% + 6px);z-index:10;width:320px;max-width:82vw;background:var(--sheet);border:1px solid var(--line);border-top:3px solid var(--orange);box-shadow:0 12px 32px rgba(1,0,44,.18);padding:6px;text-align:left}
+.olk-menu button{all:unset;box-sizing:border-box;display:block;width:100%;padding:8px 10px;cursor:pointer;color:var(--ink)}
+.olk-menu button:hover,.olk-menu button:focus-visible{background:var(--sheet-2)}
+.olk-menu b{display:block;font-weight:600;font-size:14px}
+.olk-menu small{display:block;color:var(--muted);font-size:12px;margin-top:1px;white-space:normal}
+@media (max-width:640px){.olk-menu{position:fixed;left:12px;right:12px;bottom:84px;width:auto;max-width:none}}
 .tourmap{max-width:560px;margin:0 auto}
 .bd-route.static{position:relative;left:auto;top:auto;bottom:auto;width:100%;height:auto;aspect-ratio:600/700}
 .qs-scrim{align-items:stretch;justify-content:center;padding:0}
@@ -2448,11 +2457,101 @@ function mtMailto(m) {
   const cr = (m.notes || "").trim(), a = mtActs(m);
   const subj = `${cr ? "Compte rendu" : "Ordre du jour"} · ${m.title || "Réunion"} du ${m.date ? fmtDate(m.date) : "?"}`;
   let body = `Bonjour,\n\n${cr ? "Voici le compte rendu de la réunion" : "Voici l'ordre du jour de la réunion"} du ${mtWhen(m)}${m.place ? " (" + m.place + ")" : ""}.\n\n`;
+  const ev = !cr && m.date && m.date >= todayISO() ? mtOutlookEv(m, m.id) : null; if (ev) body += OLK.links(ev, true) + "\n\n";
   if (cr) { body += cr + "\n"; if (a.length) body += "\nActions :\n" + a.map(t => `- ${t.t}${taskWho(t).length ? " (" + whoNames(t) + ")" : ""}${t.due ? " pour le " + fmtDate(t.due) : ""}`).join("\n") + "\n"; }
   else body += (m.agenda || "(à compléter)") + "\n";
   body += `\nLe détail est dans le Dashboard EAT, onglet Planning.\n`;
   if (body.length > 1700) body = body.slice(0, 1700) + "\n[…] suite dans le Dashboard EAT, onglet Planning.\n";
   return {to, href:`mailto:${to.map(encodeURIComponent).join(",")}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`};
+}
+/* ---------- Outlook : invitation, lien à envoyer, fichier .ics ----------
+   ev = {uid, title, start:Date, end:Date|null, allDay:bool, location, body, to:[e-mails des invités]}
+   Les liens ouvrent la fenêtre « Nouvel événement » d'Outlook déjà remplie (Microsoft 365 ou Outlook.com).
+   Les heures partent en UTC : Outlook les affiche dans le fuseau de chacun. */
+const OLK = (() => {
+  const BASE = {pro: "https://outlook.office.com/calendar/action/compose", perso: "https://outlook.live.com/calendar/0/action/compose"};
+  const p2 = n => String(n).padStart(2, "0");
+  const day = d => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+  const nextDay = s => { const d = new Date(s + "T12:00:00"); d.setDate(d.getDate() + 1); return day(d); };
+  const utc = d => d.toISOString().replace(/\.\d{3}Z$/, "Z");
+  const span = ev => ev.allDay
+    ? {allDay: true, s: day(ev.start), e: nextDay(ev.end && day(ev.end) > day(ev.start) ? day(ev.end) : day(ev.start))}
+    : {allDay: false, s: ev.start, e: ev.end && ev.end > ev.start ? ev.end : new Date(+ev.start + 3600e3)};
+  function url(ev, kind = "pro", full = true) {
+    const t = span(ev), q = new URLSearchParams({path: "/calendar/action/compose", rru: "addevent", subject: ev.title || "Réunion"});
+    if (t.allDay) { q.set("startdt", t.s); q.set("enddt", t.e); q.set("allday", "true"); }
+    else { q.set("startdt", utc(t.s)); q.set("enddt", utc(t.e)); }
+    if (ev.location) q.set("location", ev.location);
+    if (full && ev.body) q.set("body", ev.body.slice(0, 1500));
+    if (full && ev.to && ev.to.length) q.set("to", ev.to.join(","));
+    return BASE[kind] + "?" + q.toString().replace(/\+/g, "%20");
+  }
+  function when(ev, loc = "fr-FR") {
+    const D = d => d.toLocaleDateString(loc, {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+    const H = d => d.toLocaleTimeString(loc, {hour: "2-digit", minute: "2-digit"});
+    if (ev.allDay) return ev.end && day(ev.end) > day(ev.start) ? `du ${D(ev.start)} au ${D(ev.end)}` : `le ${D(ev.start)} (toute la journée)`;
+    const e = ev.end && ev.end > ev.start ? ev.end : null;
+    return `le ${D(ev.start)} à ${H(ev.start)}${e ? (day(e) === day(ev.start) ? `, jusqu'à ${H(e)}` : `, jusqu'au ${D(e)} à ${H(e)}`) : ""}`;
+  }
+  const links = (ev, tu) => `Ajouter à ${tu ? "ton" : "votre"} agenda Outlook en un clic :\n– compte école ou pro (Microsoft 365) : ${url(ev, "pro", false)}\n– compte personnel (Outlook.com) : ${url(ev, "perso", false)}`;
+  function ics(ev, prodid) {
+    const t = span(ev), x = s => String(s || "").replace(/[\\;,]/g, m => "\\" + m).replace(/\r?\n/g, "\\n");
+    const z = d => utc(d).replace(/[-:]/g, ""), dd = s => s.replace(/-/g, ""), enc = new TextEncoder();
+    const fold = l => { let o = "", n = 0; for (const ch of l) { const b = enc.encode(ch).length; if (n + b > 74) { o += "\r\n "; n = 1; } o += ch; n += b; } return o; };
+    return ["BEGIN:VCALENDAR", "VERSION:2.0", `PRODID:-//${prodid}//FR`, "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VEVENT",
+      `UID:${ev.uid}`, `DTSTAMP:${z(new Date())}`,
+      ...(t.allDay ? [`DTSTART;VALUE=DATE:${dd(t.s)}`, `DTEND;VALUE=DATE:${dd(t.e)}`] : [`DTSTART:${z(t.s)}`, `DTEND:${z(t.e)}`]),
+      `SUMMARY:${x(ev.title || "Réunion")}`, ...(ev.location ? [`LOCATION:${x(ev.location)}`] : []), ...(ev.body ? [`DESCRIPTION:${x(ev.body)}`] : []),
+      "END:VEVENT", "END:VCALENDAR"].map(fold).join("\r\n") + "\r\n";
+  }
+  const ITEMS = tu => [
+    ["pro", "Créer l'invitation dans Outlook", `Compte école ou pro (Microsoft 365) : ${tu ? "vérifie puis clique" : "vérifiez puis cliquez"} sur Envoyer`],
+    ["perso", "Créer l'invitation dans Outlook.com", "Compte Microsoft personnel"],
+    ["mail", "Envoyer le lien par e-mail", "Chaque invité l'ajoute à son agenda Outlook en un clic"],
+    ["copy", "Copier le lien Outlook", "À coller dans Teams, WhatsApp, un message…"],
+    ["ics", "Télécharger le fichier .ics", "Outlook sur ordinateur, agenda du téléphone, Google Agenda"]];
+  const menu = (attr, btnCls = "btn", tu = false) => `<details class="olk"><summary class="${btnCls}" title="Inviter ou ajouter à l'agenda Outlook">Outlook ▾</summary><div class="olk-menu" role="menu">
+    ${ITEMS(tu).map(([k, b, s]) => `<button type="button" role="menuitem" ${attr(k)}><b>${b}</b><small>${s}</small></button>`).join("")}</div></details>`;
+  async function copy(text) { try { await navigator.clipboard.writeText(text); return true; } catch (e) { return false; } }
+  function openLink(href) { const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove(); }
+  // o = {toast(msg, err), download(nom, texte), mailTo:[e-mails], app:"Nom du dashboard", locale, file:"nom-de-fichier", extra:"texte ajouté à l'e-mail", tu:true pour tutoyer}
+  async function run(k, ev, o) {
+    const T = (vous, tu) => o.tu ? tu : vous;
+    const where = `${when(ev, o.locale)}${ev.location ? ` (${ev.location})` : ""}`;
+    if (k === "pro" || k === "perso") {
+      openLink(url(ev, k, true));
+      if (ev.to && ev.to.length) { const ok = await copy(ev.to.join("; ")); o.toast(`Outlook s'ouvre avec la réunion préremplie.${ok ? T(" Les adresses des invités sont aussi copiées : collez-les dans « Inviter des participants » si elles n'y sont pas.", " Les adresses des invités sont aussi copiées : colle-les dans « Inviter des participants » si elles n'y sont pas.") : ""} ${T("Cliquez", "Clique")} ensuite sur Envoyer.`); }
+      else o.toast(T("Outlook s'ouvre avec la réunion préremplie : ajoutez les invités puis cliquez sur Envoyer.", "Outlook s'ouvre avec la réunion préremplie : ajoute les invités puis clique sur Envoyer."));
+      return;
+    }
+    if (k === "copy") {
+      const ok = await copy(`${ev.title || "Réunion"}, ${where}\n\n${links(ev, o.tu)}`);
+      o.toast(ok ? T("Lien Outlook copié : collez-le dans un message.", "Lien Outlook copié : colle-le dans un message.") : T("Copie impossible ici : utilisez « Envoyer le lien par e-mail ».", "Copie impossible ici : utilise « Envoyer le lien par e-mail »."), !ok);
+      return;
+    }
+    if (k === "mail") {
+      const to = o.mailTo || [];
+      let body = `Bonjour,\n\n${T("Vous êtes invité(e)", "Tu es invité(e)")} : ${ev.title || "Réunion"}, ${where}.\n\n${links(ev, o.tu)}\n`;
+      if (o.extra) body += `\n${o.extra}\n`;
+      if (body.length > 1800) body = body.slice(0, 1800) + "\n[…]\n";
+      openLink(`mailto:${to.map(encodeURIComponent).join(",")}?subject=${encodeURIComponent(`Invitation · ${ev.title || "Réunion"} · ${ev.start.toLocaleDateString(o.locale || "fr-FR", {day: "numeric", month: "long"})}`)}&body=${encodeURIComponent(body)}`);
+      if (!to.length) o.toast(T("Aucun invité n'a d'e-mail enregistré : ajoutez les destinataires dans votre messagerie.", "Aucun invité n'a d'e-mail enregistré : ajoute les destinataires dans ta messagerie."), true);
+      return;
+    }
+    if (k === "ics") o.download(`${o.file || "reunion"}.ics`, ics(ev, o.app || "Dashboard"));
+  }
+  document.addEventListener("click", e => { document.querySelectorAll("details.olk[open]").forEach(d => { if (!d.contains(e.target) || e.target.closest(".olk-menu button")) d.removeAttribute("open"); }); });
+  return {url, when, links, ics, menu, run};
+})();
+// Téléchargement d'un fichier (dans meetingBox, « save » désigne l'enregistrement de la réunion).
+const saveFile = (name, text) => save(name, text);
+// Réunion telle qu'elle est saisie dans la fenêtre : 1 h par défaut, journée entière si l'heure est vide.
+function mtOutlookEv(d, id) {
+  if (!d.date) return null;
+  const site = location.href.split("#")[0];
+  const to = (d.who || []).map(x => S.orgs[x] && S.orgs[x].email).filter(e => e && e.includes("@"));
+  const body = [(d.agenda || "").trim() ? "Ordre du jour :\n" + d.agenda.trim() : "", /^https?:/.test(site) ? "Dashboard EAT : " + site + "#planning" : ""].filter(Boolean).join("\n\n");
+  return {uid:`meeting-${id || Date.now().toString(36)}@eat`, title:"EAT · " + (d.title || "Réunion"), start:new Date(`${d.date}T${d.time || "12:00"}:00`), end:null, allDay:!d.time, location:d.place || "", body, to};
 }
 function meetingsCard() {
   const all = mtSorted(), nx = mtNext(), today = todayISO();
@@ -2499,6 +2598,7 @@ function meetingBox(id, preset) {
         <div id="mt-prev" class="ptp">${preview()}</div>` : ""}
       <div class="row" style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
         ${m0 ? `<button class="btn ghost danger-t" data-mt="del" style="margin-right:auto">Supprimer</button><button class="btn ghost" data-mt="next">Programmer la suivante</button>` : ""}
+        ${OLK.menu(k => `data-mt="olk:${k}"`, "btn ghost", true)}
         <button class="btn ghost" data-mt="mail">Envoyer par e-mail</button>
         <button class="btn ghost" data-mt="0">Fermer</button>
         <button class="btn primary" data-mt="1">${m0 ? "Enregistrer" : "Créer la réunion"}</button></div></div></div>`;
@@ -2538,6 +2638,9 @@ function meetingBox(id, preset) {
     if (b.dataset.mtt) { grab(); UI.mtTab = b.dataset.mtt; draw(); return; }
     const k = b.dataset.mt; if (!k) return;
     if (k === "0") { close(); return; }
+    if (k.startsWith("olk:")) { grab(); const ev = mtOutlookEv(d, id); if (!ev) { toast("Indique d'abord la date de la réunion.", true); return; }
+      OLK.run(k.slice(4), ev, {toast, tu:true, locale:"fr-FR", app:"EIGS'AERO EAT", mailTo:ev.to, download:saveFile,
+        file:"EAT_reunion_" + d.date, extra:(d.agenda || "").trim() ? "Ordre du jour :\n" + d.agenda.trim() : ""}); return; }
     if (k === "gen") { grab(); if ((d.agenda || "").trim() && !(await confirmBox("Remplacer l'ordre du jour actuel par une nouvelle proposition ?", "Remplacer"))) { draw(); return; } d.agenda = mtAgenda({...d, id}); uiSnd("add"); draw(); return; }
     if (k === "frame") { grab(); d.notes = d.agenda.split("\n").filter(l => /^\d+\./.test(l)).map(l => l + "\n").join("\n"); draw(); return; }
     if (k === "mail") { grab(); const r = mtMailto({...d, actions:m0 ? m0.actions : []}); if (!r.to.length) toast("Aucun participant n'a d'e-mail dans Organisateurs : complète-les ou ajoute les destinataires à la main.", true); window.open(r.href, "_blank"); return; }
